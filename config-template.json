@@ -1,0 +1,53 @@
+{
+  "sshConfig": {
+    "sshHost": "your-bastion-host.com",
+    "sshPort": 22,
+    "sshUsername": "your-username",
+    "sshPassword": "your-password"
+  },
+  "tunnels": [
+    {
+      "name": "Database Server 1",
+      "remoteHost": "internal-db-server.com",
+      "remotePort": 5432,
+      "localPort": 15432,
+      "autoReconnect": true,
+      "maxReconnectAttempts": 5,
+      "reconnectDelay": 5000
+    },
+    {
+      "name": "Redis Server",
+      "remoteHost": "internal-redis-server.com",
+      "remotePort": 6379,
+      "localPort": 16379,
+      "autoReconnect": true
+    },
+    {
+      "name": "Web Server",
+      "remoteHost": "internal-web-server.com",
+      "remotePort": 80,
+      "localPort": 18080,
+      "autoReconnect": true
+    },
+    {
+      "name": "SOCKS5 Proxy",
+      "remoteHost": "localhost",
+      "remotePort": 1080,
+      "localPort": 10800,
+      "enableSocks5": true,
+      "socks5Port": 10801,
+      "socks5Host": "localhost",
+      "autoReconnect": true
+    },
+    {
+      "name": "Dynamic SOCKS5",
+      "remoteHost": "localhost",
+      "remotePort": 1081,
+      "localPort": 10810,
+      "enableDynamicSocks5": true,
+      "dynamicSocks5Port": 10811,
+      "dynamicSocks5Host": "localhost",
+      "autoReconnect": true
+    }
+  ]
+} 
