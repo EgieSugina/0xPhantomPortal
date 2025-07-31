@@ -80,7 +80,7 @@ function getFallbackConfig(): SSHTunnelConfig[] {
       name: "DB 142",
       remoteHost: "10.54.18.142",
       remotePort: 5432,
-      localPort: 15432,
+      localPort: 54142,
       autoReconnect: true,
     },
     {
@@ -88,7 +88,15 @@ function getFallbackConfig(): SSHTunnelConfig[] {
       name: "DB 54",
       remoteHost: "10.54.18.54",
       remotePort: 5432,
-      localPort: 25432,
+      localPort: 5454,
+      autoReconnect: true,
+    },
+    {
+      ...sshConf,
+      name: "DB 235",
+      remoteHost: "10.54.18.235",
+      remotePort: 5432,
+      localPort: 54235,
       autoReconnect: true,
     },
     {
@@ -96,9 +104,9 @@ function getFallbackConfig(): SSHTunnelConfig[] {
       name: "Bypass",
       remoteHost: "localhost",
       remotePort: 1081,
-      localPort: 10831,
+      localPort: 1081,
       enableDynamicSocks5: true,
-      dynamicSocks5Port: 10811,
+      dynamicSocks5Port: 10801,
     },
   ];
 } 
