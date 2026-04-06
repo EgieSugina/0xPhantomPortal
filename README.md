@@ -4,6 +4,11 @@ Desktop app for managing **SSH tunnels** with auto-reconnect: **SOCKS5** (`-D`),
 
 Built with **Python 3** and **PySide6 (Qt)**.
 
+## Preview
+
+![Port Forward UI](https://raw.githubusercontent.com/EgieSugina/0xPhantomPortal/refs/heads/main/img/1.png)
+![SFTP UI](https://raw.githubusercontent.com/EgieSugina/0xPhantomPortal/refs/heads/main/img/2.png)
+
 ## Features
 
 - Tabbed UI: **Port Forward** + **SFTP**

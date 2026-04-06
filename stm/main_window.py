@@ -57,12 +57,14 @@ from .config import (
     TUNNEL_KINDS,
     TITLE_FONT_FAMILY,
     load_app_icon,
+    load_sftp_accounts,
     resource_dir,
     delete_password,
     load_password,
     normalize_tunnel_record,
     parse_tunnels_json,
     save_password,
+    save_sftp_accounts,
 )
 from .dialogs import TunnelDialog
 from .sftp import SFTPPanel
@@ -109,9 +111,12 @@ class MainWindow(QMainWindow):
         title_font.setBold(True)
         title.setFont(title_font)
         title.setStyleSheet(f"letter-spacing:1px;color:{THEME_TITLE};")
+        cfg_btn_global = self._btn("⭳⭱ Config", THEME_BTN_SECONDARY, self._config_io)
+        cfg_btn_global.setToolTip("Backup/Restore full configuration")
         header.addWidget(logo)
         header.addWidget(title)
         header.addStretch()
+        header.addWidget(cfg_btn_global)
         root.addLayout(header)
 
         sep = QFrame()
@@ -128,17 +133,14 @@ class MainWindow(QMainWindow):
         tunnels_layout.setContentsMargins(0, 0, 0, 0)
         tunnels_layout.setSpacing(8)
         tunnels_toolbar = QHBoxLayout()
+        tunnels_toolbar.setSpacing(8)
         add_btn = self._btn("＋ Add", THEME_PRIMARY, self._add_tunnel)
         edit_btn = self._btn("✏ Edit", THEME_BTN_SECONDARY, self._edit_tunnel)
         del_btn = self._btn("✕ Delete", "#9b1c3a", self._delete_tunnel)
-        exp_btn = self._btn("⭳ Export", THEME_BTN_SECONDARY, self._export_config)
-        imp_btn = self._btn("⭱ Import", THEME_BTN_SECONDARY, self._import_config)
         tunnels_toolbar.addWidget(add_btn)
         tunnels_toolbar.addWidget(edit_btn)
         tunnels_toolbar.addWidget(del_btn)
         tunnels_toolbar.addStretch()
-        tunnels_toolbar.addWidget(exp_btn)
-        tunnels_toolbar.addWidget(imp_btn)
         tunnels_layout.addLayout(tunnels_toolbar)
         splitter = QSplitter(Qt.Vertical)
 
@@ -291,33 +293,91 @@ class MainWindow(QMainWindow):
     def _save_config(self):
         CONFIG_FILE.write_text(json.dumps(self._tunnels, indent=2))
 
+    def _config_io(self):
+        box = QMessageBox(self)
+        box.setWindowTitle("Configuration")
+        box.setText("Choose configuration action:")
+        export_btn = box.addButton("Export All", QMessageBox.AcceptRole)
+        import_btn = box.addButton("Import All", QMessageBox.ActionRole)
+        box.addButton(QMessageBox.Cancel)
+        box.exec()
+        clicked = box.clickedButton()
+        if clicked == export_btn:
+            self._export_config()
+        elif clicked == import_btn:
+            self._import_config()
+
     def _export_config(self):
-        path, _flt = QFileDialog.getSaveFileName(self, "Export tunnel configuration", str(Path.home() / "ssh-tunnel-manager-tunnels.json"), "JSON (*.json);;All files (*)")
+        path, _flt = QFileDialog.getSaveFileName(
+            self,
+            "Export full configuration",
+            str(Path.home() / "0xPhantomPortal-config.json"),
+            "JSON (*.json);;All files (*)",
+        )
         if not path:
             return
-        Path(path).write_text(json.dumps(self._tunnels, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        QMessageBox.information(self, "Export", "Configuration exported.\n\nPasswords are not included.")
+        payload = {
+            "app": APP_DISPLAY_NAME,
+            "format_version": 1,
+            "tunnels": self._tunnels,
+            "sftp_accounts": load_sftp_accounts(),
+        }
+        Path(path).write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        QMessageBox.information(
+            self,
+            "Export",
+            "Configuration exported (Port Forward + SFTP accounts).\n\nPasswords are not included.",
+        )
 
     def _import_config(self):
-        path, _flt = QFileDialog.getOpenFileName(self, "Import tunnel configuration", str(Path.home()), "JSON (*.json);;All files (*)")
+        path, _flt = QFileDialog.getOpenFileName(
+            self,
+            "Import full configuration",
+            str(Path.home()),
+            "JSON (*.json);;All files (*)",
+        )
         if not path:
             return
         text = Path(path).read_text(encoding="utf-8")
-        raw_list, err = parse_tunnels_json(text)
-        if err is not None:
-            QMessageBox.critical(self, "Import failed", f"Invalid JSON: {err}")
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError as e:
+            QMessageBox.critical(self, "Import failed", f"Invalid JSON: {e}")
             return
+        raw_tunnels = None
+        raw_sftp_accounts = []
+        if isinstance(data, dict):
+            if isinstance(data.get("tunnels"), list):
+                raw_tunnels = data.get("tunnels", [])
+            if isinstance(data.get("sftp_accounts"), list):
+                raw_sftp_accounts = data.get("sftp_accounts", [])
+        if raw_tunnels is None:
+            raw_tunnels, err = parse_tunnels_json(text)
+            if err is not None:
+                QMessageBox.critical(self, "Import failed", f"Invalid JSON: {err}")
+                return
         normalized = []
-        for item in raw_list or []:
+        for item in raw_tunnels or []:
             t = normalize_tunnel_record(item) if isinstance(item, dict) else None
             if t:
                 normalized.append(t)
-        if not normalized:
-            QMessageBox.warning(self, "Import", "No valid tunnel entries found.")
+        imported_tunnels = 0
+        if normalized:
+            imported_tunnels = self._apply_import_merge(normalized)
+        imported_sftp = self._merge_sftp_accounts(raw_sftp_accounts)
+        if hasattr(self, "sftp_panel"):
+            self.sftp_panel._load_accounts()
+        if imported_tunnels == 0 and imported_sftp == 0:
+            QMessageBox.warning(self, "Import", "No valid entries found.")
             return
-        self._apply_import_merge(normalized)
+        QMessageBox.information(
+            self,
+            "Import",
+            f"Imported: {imported_tunnels} tunnel(s), {imported_sftp} SFTP account(s).\n\n"
+            "Passwords are not imported.",
+        )
 
-    def _apply_import_merge(self, tunnels: list[dict]) -> None:
+    def _apply_import_merge(self, tunnels: list[dict]) -> int:
         used = {t["id"] for t in self._tunnels}
         added = 0
         for t in tunnels:
@@ -334,6 +394,32 @@ class MainWindow(QMainWindow):
         self._save_config()
         self._refresh_tables()
         self.status_label.setText(f"Merged {added} tunnel(s)")
+        return added
+
+    def _merge_sftp_accounts(self, accounts: list[dict]) -> int:
+        if not isinstance(accounts, list):
+            return 0
+        existing = load_sftp_accounts()
+        by_name = {str(a.get("name", "")).strip(): dict(a) for a in existing if str(a.get("name", "")).strip()}
+        imported = 0
+        for item in accounts:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name", "")).strip()
+            if not name:
+                continue
+            rec = {
+                "name": name,
+                "host": str(item.get("host", "")).strip(),
+                "username": str(item.get("username", "")).strip(),
+                "port": int(item.get("port", 22) or 22),
+                "key_file": str(item.get("key_file", "")).strip(),
+            }
+            by_name[name] = rec
+            imported += 1
+        if imported:
+            save_sftp_accounts(list(by_name.values()))
+        return imported
 
     def _tunnels_for_kind(self, kind: str) -> list[dict]:
         return [t for t in self._tunnels if t.get("kind", KIND_SOCKS) == kind]
