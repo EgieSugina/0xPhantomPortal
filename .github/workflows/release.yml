@@ -1,0 +1,68 @@
+# Build the PyInstaller binary on GitHub and attach it to a release when you push a tag v*.
+# No GitHub CLI needed locally — only: git tag v1.2.3 && git push origin v1.2.3
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install OS packages (Qt / headless raster)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libegl1 \
+            libgl1 \
+            libdbus-1-3 \
+            libxkbcommon0 \
+            libxkbcommon-x11-0 \
+            libxcb-cursor0 \
+            libxcb-xinerama0 \
+            libxcb-icccm4 \
+            libxcb-image0 \
+            libxcb-keysyms1 \
+            libxcb-randr0 \
+            libxcb-render0 \
+            libxcb-shape0 \
+            libxcb-shm0 \
+            libxcb-sync1 \
+            libxcb-xfixes0
+
+      - name: Build binary
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Prepare release asset
+        id: asset
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARCH="$(uname -m)"
+          NAME="ssh-tunnel-manager-${VERSION}-linux-${ARCH}"
+          test -f "dist/SSH Tunnel Manager"
+          cp "dist/SSH Tunnel Manager" "$NAME"
+          chmod +x "$NAME"
+          echo "path=$NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.asset.outputs.path }}
+          generate_release_notes: true
