@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import time
 from pathlib import Path
 
@@ -62,6 +63,23 @@ def resource_dir() -> Path:
     if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
         return Path(sys._MEIPASS)
     return Path(__file__).resolve().parent.parent
+
+
+def prepend_bundled_ssh_tools_path() -> None:
+    """If PyInstaller bundled `ssh` / `sshpass` next to extracted assets, put them on PATH."""
+    rd = resource_dir()
+    if not any((rd / name).is_file() for name in ("ssh", "sshpass")):
+        return
+    prefix = str(rd)
+    os.environ["PATH"] = prefix + os.pathsep + os.environ.get("PATH", "")
+
+
+def which_ssh_client() -> str | None:
+    return shutil.which("ssh")
+
+
+def which_sshpass() -> str | None:
+    return shutil.which("sshpass")
 
 
 def load_app_icon() -> QIcon:

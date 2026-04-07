@@ -64,6 +64,21 @@ if command -v upx >/dev/null 2>&1; then
   UPX_ARGS+=(--upx-dir "$(dirname "$(command -v upx)")")
 fi
 
+# Optional: ship ssh + sshpass inside the onefile extract dir (see stm/config.py prepend_bundled_ssh_tools_path).
+# You must place executables that match the distro you target; OpenSSH is dynamically linked — copying
+# random binaries often breaks on other distros. Example:
+#   mkdir -p bundle_ssh && cp "$(command -v ssh)" "$(command -v sshpass)" bundle_ssh/
+#   export BUNDLE_SSH_TOOLS=1
+# Licensing: respect OpenSSH/sshpass and OpenSSL (etc.) licenses if you redistribute.
+BUNDLE_BIN_ARGS=()
+if [[ "${BUNDLE_SSH_TOOLS:-}" == "1" && -d "${ROOT}/bundle_ssh" ]]; then
+  for f in ssh sshpass; do
+    if [[ -f "${ROOT}/bundle_ssh/${f}" ]]; then
+      BUNDLE_BIN_ARGS+=(--add-binary "${ROOT}/bundle_ssh/${f}:.")
+    fi
+  done
+fi
+
 python3 -m PyInstaller \
   --noconfirm \
   --clean \
@@ -72,6 +87,7 @@ python3 -m PyInstaller \
   --name "${OUT_NAME}" \
   --icon "build/app_icon.png" \
   "${DATA_ARGS[@]}" \
+  "${BUNDLE_BIN_ARGS[@]}" \
   --hidden-import PySide6.QtSvg \
   --optimize 2 \
   "${STRIP_FLAG[@]}" \
