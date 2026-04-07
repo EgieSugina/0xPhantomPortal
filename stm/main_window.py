@@ -205,7 +205,7 @@ class MainWindow(QMainWindow):
         ab.addWidget(self.disconnect_all_btn)
         tunnels_layout.addLayout(ab)
 
-        self.main_tabs.addTab(tunnels_page, "PORT FORWARDING")
+        self.main_tabs.addTab(tunnels_page, "PORT_FORWARDING")
         self.sftp_panel = SFTPPanel(self)
         self.main_tabs.addTab(self.sftp_panel, "SFTP")
         self._apply_tab_icons()

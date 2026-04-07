@@ -90,6 +90,7 @@ class SFTPPanel(QWidget):
         # self._pulse_on = True
         # self._cursor_on = True
         self._connected_profile_name: str | None = None
+        self._profile_connection_status: dict[str, tuple[str, str]] = {}
         self._build_ui()
         self._load_accounts()
         # self._visual_timer = QTimer(self)
@@ -796,7 +797,8 @@ class SFTPPanel(QWidget):
         self.port_spin.setValue(int(acc.get("port", 22) or 22))
         self.key_edit.setText(acc.get("key_file", ""))
         self.pass_edit.setText(load_password(sftp_password_id(acc["name"])))
-        if self._connect():
+        ok, _err = self._connect()
+        if ok:
             self._connected_profile_name = name
             self.active_profile_label.setText(f"CONNECTED TO: {name}")
             self.pages.setCurrentWidget(self.page_workspace)
@@ -846,6 +848,17 @@ class SFTPPanel(QWidget):
             )
         return btn
 
+    @staticmethod
+    def _short_profile_status_text(text: str, max_len: int = 160) -> str:
+        t = " ".join(text.split())
+        if len(t) <= max_len:
+            return t
+        return t[: max_len - 1] + "…"
+
+    def _rebuild_profile_grid_if_profiles_visible(self) -> None:
+        if hasattr(self, "pages") and self.pages.currentWidget() is self.page_profiles:
+            self._rebuild_profile_grid()
+
     def _make_profile_dashboard_card(
         self,
         name: str,
@@ -854,6 +867,7 @@ class SFTPPanel(QWidget):
         user: str,
         idx: int,
         is_active_tunnel: bool,
+        status: tuple[str, str] | None,
     ) -> QFrame:
         card = QFrame()
         card.setObjectName("SftpProfileCard")
@@ -919,6 +933,28 @@ class SFTPPanel(QWidget):
             "font-size:12px;color:#767480;background:transparent;border:none;margin-top:2px;"
         )
         outer.addWidget(sub)
+        if status:
+            kind, raw_msg = status
+            msg = self._short_profile_status_text(raw_msg)
+            st = QLabel(msg)
+            st.setWordWrap(True)
+            st.setMinimumHeight(22)
+            if kind == "connecting":
+                st.setStyleSheet(
+                    "font-size:11px;color:#ffb74d;font-weight:600;background:transparent;"
+                    "border:none;padding-top:6px;"
+                )
+            elif kind == "error":
+                st.setStyleSheet(
+                    "font-size:11px;color:#ff6e84;font-weight:600;background:transparent;"
+                    "border:none;padding-top:6px;"
+                )
+            else:
+                st.setStyleSheet(
+                    "font-size:11px;color:#00fd93;font-weight:600;background:transparent;"
+                    "border:none;padding-top:6px;"
+                )
+            outer.addWidget(st)
         outer.addStretch()
 
         row = QHBoxLayout()
@@ -975,7 +1011,8 @@ class SFTPPanel(QWidget):
             user = acc.get("username", "")
             port = int(acc.get("port", 22) or 22)
             is_active = bool(is_connected and active_name == name)
-            card = self._make_profile_dashboard_card(name, host, port, user, idx, is_active)
+            st = self._profile_connection_status.get(name)
+            card = self._make_profile_dashboard_card(name, host, port, user, idx, is_active, st)
             self.profile_grid_layout.addWidget(card, idx // cols, idx % cols)
         add_i = len(self._accounts)
         self.profile_grid_layout.addWidget(self._make_new_profile_tile(), add_i // cols, add_i % cols)
@@ -1047,26 +1084,33 @@ class SFTPPanel(QWidget):
             return False
         return True
 
-    def _connect(self):
+    def _connect(self) -> tuple[bool, str | None]:
         if self._busy:
-            return False
+            return False, "Another operation is still running."
         if not PARAMIKO_OK:
             QMessageBox.critical(
                 self,
                 "SFTP unavailable",
                 "Python package 'paramiko' is not installed.\n\nInstall it in your active environment:\npip install paramiko",
             )
-            return False
+            return False, "paramiko is not installed."
         host = self.host_edit.text().strip()
         user = self.user_edit.text().strip()
         if not host or not user:
             QMessageBox.warning(self, "SFTP", "Host and Username are required.")
-            return False
-        timeout = int(self.timeout_spin.value())
+            return False, "Host and username are required."
+        profile_name = self.account_name_edit.text().strip()
+        ok = False
+        err_msg: str | None = None
         try:
+            timeout = int(self.timeout_spin.value())
             self._set_busy(True)
             self._append(f"🔌 Connecting to {user}@{host}:{self.port_spin.value()} ...")
             self._disconnect()
+            if profile_name:
+                self._profile_connection_status[profile_name] = ("connecting", "Connecting…")
+                self._rebuild_profile_grid_if_profiles_visible()
+            self._yield_ui()
             self._append(f"⏱ Connection timeout: {timeout}s")
             sock = socket.create_connection((host, int(self.port_spin.value())), timeout=timeout)
             self._transport = paramiko.Transport(sock)
@@ -1088,29 +1132,41 @@ class SFTPPanel(QWidget):
             self._refresh()
             nm = self.account_name_edit.text().strip()
             self._connected_profile_name = nm if nm else None
-            return True
+            ok = True
         except socket.timeout:
+            err_msg = "Timeout: host unreachable or SSH too slow."
             self._append("❌ Connect timeout. Host unreachable or SSH service too slow.")
             self._disconnect()
-            return False
         except TimeoutError:
+            err_msg = "Timeout: host unreachable or SSH too slow."
             self._append("❌ Connect timeout. Host unreachable or SSH service too slow.")
             self._disconnect()
-            return False
         except paramiko.ssh_exception.SSHException as e:
             msg = str(e)
             if "Error reading SSH protocol banner" in msg:
+                err_msg = "Not an SSH server or wrong port."
                 self._append("❌ SSH banner timeout. Check host/port and ensure target is an SSH server.")
             else:
+                err_msg = f"SSH: {self._short_profile_status_text(msg, 120)}"
                 self._append(f"❌ SSH error: {msg}")
             self._disconnect()
-            return False
         except Exception as e:
+            err_msg = f"{self._short_profile_status_text(str(e), 120)}"
             self._append(f"❌ Connect failed: {e}")
             self._disconnect()
-            return False
         finally:
             self._set_busy(False)
+            if profile_name:
+                if ok:
+                    self._profile_connection_status[profile_name] = ("ok", "Connected")
+                else:
+                    self._profile_connection_status[profile_name] = (
+                        "error",
+                        err_msg or "Connection failed",
+                    )
+            self._rebuild_profile_grid_if_profiles_visible()
+
+        return ok, err_msg
 
     def _test_connection(self):
         if self._busy:
@@ -1175,7 +1231,10 @@ class SFTPPanel(QWidget):
             pass
         self._sftp = None
         self._transport = None
+        was = self._connected_profile_name
         self._connected_profile_name = None
+        if was and was in self._profile_connection_status:
+            del self._profile_connection_status[was]
         self.active_profile_label.setText("CONNECTED TO: NONE")
         self._set_busy(False)
         if show_profiles:
