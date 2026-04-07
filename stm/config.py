@@ -223,6 +223,9 @@ def load_sftp_accounts() -> list[dict]:
                 "username": str(item.get("username", "")).strip(),
                 "port": int(item.get("port", 22) or 22),
                 "key_file": str(item.get("key_file", "")).strip(),
+                "use_socks5": bool(item.get("use_socks5", False)),
+                "socks_host": str(item.get("socks_host", "127.0.0.1")).strip() or "127.0.0.1",
+                "socks_port": int(item.get("socks_port", 1080) or 1080),
             }
         )
     return out

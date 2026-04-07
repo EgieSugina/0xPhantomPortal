@@ -2,6 +2,7 @@ import os
 import posixpath
 import socket
 import stat
+import struct
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from ..config import PARAMIKO_OK
@@ -12,7 +13,16 @@ if PARAMIKO_OK:
 
 def open_client_from_params(params):
     timeout = int(params.get("timeout", 8) or 8)
-    sock = socket.create_connection((params["host"], params["port"]), timeout=timeout)
+    if params.get("use_socks5"):
+        sock = _open_socks5_socket(
+            proxy_host=str(params.get("socks_host") or "127.0.0.1"),
+            proxy_port=int(params.get("socks_port") or 1080),
+            target_host=str(params["host"]),
+            target_port=int(params["port"]),
+            timeout=timeout,
+        )
+    else:
+        sock = socket.create_connection((params["host"], params["port"]), timeout=timeout)
     transport = paramiko.Transport(sock)
     transport.banner_timeout = timeout
     transport.auth_timeout = timeout
@@ -25,6 +35,74 @@ def open_client_from_params(params):
         password = None
     transport.connect(username=params["username"], password=password, pkey=pkey)
     return transport, paramiko.SFTPClient.from_transport(transport)
+
+
+def _open_socks5_socket(
+    proxy_host: str,
+    proxy_port: int,
+    target_host: str,
+    target_port: int,
+    timeout: int,
+):
+    sock = socket.create_connection((proxy_host, proxy_port), timeout=timeout)
+    sock.settimeout(timeout)
+
+    # Greeting: ver=5, nmethods=1, method=0(no-auth)
+    sock.sendall(b"\x05\x01\x00")
+    resp = _recv_exact(sock, 2)
+    if resp[0] != 0x05:
+        raise OSError("Invalid SOCKS5 proxy response.")
+    if resp[1] == 0xFF:
+        raise OSError("SOCKS5 proxy has no acceptable auth method (no-auth rejected).")
+    if resp[1] != 0x00:
+        raise OSError("SOCKS5 proxy requires auth. Only no-auth is supported.")
+
+    host_bytes = target_host.encode("idna")
+    if len(host_bytes) > 255:
+        raise OSError("Target hostname too long for SOCKS5.")
+
+    # CONNECT request: ver=5, cmd=1, rsv=0, atyp=3(domain), addr_len, addr, port
+    req = b"\x05\x01\x00\x03" + bytes([len(host_bytes)]) + host_bytes + struct.pack(">H", int(target_port))
+    sock.sendall(req)
+
+    head = _recv_exact(sock, 4)
+    if head[0] != 0x05:
+        raise OSError("Invalid SOCKS5 connect reply.")
+    if head[1] != 0x00:
+        code = head[1]
+        reasons = {
+            0x01: "general SOCKS server failure",
+            0x02: "connection not allowed by ruleset",
+            0x03: "network unreachable",
+            0x04: "host unreachable",
+            0x05: "connection refused",
+            0x06: "TTL expired",
+            0x07: "command not supported",
+            0x08: "address type not supported",
+        }
+        raise OSError(f"SOCKS5 connect failed ({code}): {reasons.get(code, 'unknown error')}")
+
+    atyp = head[3]
+    if atyp == 0x01:
+        _recv_exact(sock, 4 + 2)  # ipv4 + port
+    elif atyp == 0x03:
+        ln = _recv_exact(sock, 1)[0]
+        _recv_exact(sock, ln + 2)  # domain + port
+    elif atyp == 0x04:
+        _recv_exact(sock, 16 + 2)  # ipv6 + port
+    else:
+        raise OSError("SOCKS5 reply has unknown address type.")
+    return sock
+
+
+def _recv_exact(sock, size: int) -> bytes:
+    out = b""
+    while len(out) < size:
+        chunk = sock.recv(size - len(out))
+        if not chunk:
+            raise OSError("SOCKS5 proxy closed connection unexpectedly.")
+        out += chunk
+    return out
 
 
 def collect_upload_tasks(cwd: str, paths):

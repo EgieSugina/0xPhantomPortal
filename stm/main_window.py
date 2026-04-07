@@ -272,6 +272,44 @@ class MainWindow(QMainWindow):
             QLineEdit:focus, QSpinBox:focus {{
                 border: 1px solid rgba(0,253,147,0.5);
             }}
+            QCheckBox, QRadioButton {{
+                spacing: 8px;
+                color: #ece9f7;
+                font-weight: 600;
+            }}
+            QCheckBox:disabled, QRadioButton:disabled {{
+                color: #767480;
+            }}
+            QCheckBox::indicator, QRadioButton::indicator {{
+                width: 16px;
+                height: 16px;
+                background: #12121d;
+                border: 1px solid rgba(172,163,255,0.45);
+            }}
+            QCheckBox::indicator {{
+                border-radius: 3px;
+            }}
+            QRadioButton::indicator {{
+                border-radius: 8px;
+            }}
+            QCheckBox::indicator:hover, QRadioButton::indicator:hover {{
+                border: 1px solid rgba(0,253,147,0.75);
+                background: #191924;
+            }}
+            QCheckBox::indicator:checked {{
+                background: #00fd93;
+                border: 1px solid #00fd93;
+                image: url(none);
+            }}
+            QRadioButton::indicator:checked {{
+                background: qradialgradient(cx:0.5, cy:0.5, radius:0.5,
+                    fx:0.5, fy:0.5, stop:0 #00fd93, stop:0.42 #00fd93, stop:0.48 #12121d, stop:1 #12121d);
+                border: 1px solid #00fd93;
+            }}
+            QCheckBox::indicator:disabled, QRadioButton::indicator:disabled {{
+                background: #12121d;
+                border: 1px solid rgba(72,71,82,0.5);
+            }}
             QGroupBox {{
                 border: none;
                 border-radius: 2px;
@@ -280,6 +318,25 @@ class MainWindow(QMainWindow):
                 font-weight: 700;
                 color: {THEME_HEADER_FG};
                 background-color: {THEME_BG_TABLE};
+            }}
+            QGroupBox::indicator {{
+                width: 16px;
+                height: 16px;
+                border-radius: 3px;
+                border: 1px solid rgba(172,163,255,0.45);
+                background: #12121d;
+            }}
+            QGroupBox::indicator:hover {{
+                border: 1px solid rgba(0,253,147,0.75);
+                background: #191924;
+            }}
+            QGroupBox::indicator:checked {{
+                background: #00fd93;
+                border: 1px solid #00fd93;
+                image: url(none);
+            }}
+            QGroupBox::indicator:unchecked {{
+                background: #12121d;
             }}
             QTextEdit {{
                 background-color: {THEME_LOG_BG};
@@ -480,6 +537,9 @@ class MainWindow(QMainWindow):
                 "username": str(item.get("username", "")).strip(),
                 "port": int(item.get("port", 22) or 22),
                 "key_file": str(item.get("key_file", "")).strip(),
+                "use_socks5": bool(item.get("use_socks5", False)),
+                "socks_host": str(item.get("socks_host", "127.0.0.1")).strip() or "127.0.0.1",
+                "socks_port": int(item.get("socks_port", 1080) or 1080),
             }
             by_name[name] = rec
             imported += 1

@@ -11,6 +11,7 @@ from PySide6.QtGui import QBrush, QColor, QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QCheckBox,
     QFileDialog,
     QFormLayout,
     QFrame,
@@ -135,6 +136,13 @@ class SFTPPanel(QWidget):
         self.key_edit = QLineEdit()
         self.key_edit.setPlaceholderText("~/.ssh/id_rsa_OPTIONAL")
         self.key_edit.setClearButtonEnabled(True)
+        self.use_socks5_check = QCheckBox("USE_SOCKS5_PROXY")
+        self.socks_host_edit = QLineEdit("127.0.0.1")
+        self.socks_host_edit.setClearButtonEnabled(True)
+        self.socks_port_spin = QSpinBox()
+        self.socks_port_spin.setRange(1, 65535)
+        self.socks_port_spin.setValue(1080)
+        self.use_socks5_check.toggled.connect(self._update_socks5_controls)
         self.connect_btn = QPushButton("CONNECT")
         self.disconnect_btn = QPushButton("DISCONNECT")
         self.test_btn = QPushButton("TEST_ENDPOINT")
@@ -265,7 +273,11 @@ class SFTPPanel(QWidget):
         auth_form.setLabelAlignment(Qt.AlignRight)
         auth_form.addRow("PASSWORD_AUTH:", self.pass_edit)
         auth_form.addRow("IDENTITY_KEY:", self.key_edit)
+        auth_form.addRow("", self.use_socks5_check)
+        auth_form.addRow("SOCKS5_HOST:", self.socks_host_edit)
+        auth_form.addRow("SOCKS5_PORT:", self.socks_port_spin)
         auth_form.addRow("MAX_UPLOAD_WORKERS:", self.worker_spin)
+        self._update_socks5_controls(self.use_socks5_check.isChecked())
 
         form_grid = QGridLayout()
         form_grid.setHorizontalSpacing(10)
@@ -453,6 +465,56 @@ class SFTPPanel(QWidget):
                 border-radius:3px;
                 padding:6px 8px;
                 color:#ece9f7;
+            }
+            QCheckBox, QRadioButton {
+                spacing:8px;
+                color:#ece9f7;
+                font-weight:600;
+            }
+            QCheckBox:disabled, QRadioButton:disabled {
+                color:#767480;
+            }
+            QCheckBox::indicator, QRadioButton::indicator {
+                width:16px;
+                height:16px;
+                background:#12121d;
+                border:1px solid rgba(172,163,255,0.45);
+            }
+            QCheckBox::indicator { border-radius:3px; }
+            QRadioButton::indicator { border-radius:8px; }
+            QCheckBox::indicator:hover, QRadioButton::indicator:hover {
+                border:1px solid rgba(0,253,147,0.75);
+                background:#191924;
+            }
+            QCheckBox::indicator:checked {
+                background:#00fd93;
+                border:1px solid #00fd93;
+                image: url(none);
+            }
+            QRadioButton::indicator:checked {
+                background:qradialgradient(cx:0.5, cy:0.5, radius:0.5,
+                    fx:0.5, fy:0.5, stop:0 #00fd93, stop:0.42 #00fd93, stop:0.48 #12121d, stop:1 #12121d);
+                border:1px solid #00fd93;
+            }
+            QCheckBox::indicator:disabled, QRadioButton::indicator:disabled {
+                background:#12121d;
+                border:1px solid rgba(72,71,82,0.5);
+            }
+            QGroupBox::indicator {
+                width:16px;
+                height:16px;
+                border-radius:3px;
+                border:1px solid rgba(172,163,255,0.45);
+                background:#12121d;
+            }
+            QGroupBox::indicator:hover {
+                border:1px solid rgba(0,253,147,0.75);
+                background:#191924;
+            }
+            QGroupBox::indicator:checked {
+                background:#00fd93;
+                border:1px solid #00fd93;
+                image: url(none);
             }
             QTreeWidget {
                 background:#12121d;
@@ -718,6 +780,9 @@ class SFTPPanel(QWidget):
         self.form_save_btn.setEnabled(not busy)
         self.timeout_spin.setEnabled(not busy)
         self.worker_spin.setEnabled(not busy)
+        self.use_socks5_check.setEnabled(not busy)
+        self.socks_host_edit.setEnabled(not busy and self.use_socks5_check.isChecked())
+        self.socks_port_spin.setEnabled(not busy and self.use_socks5_check.isChecked())
         self.save_account_btn.setEnabled(not busy)
         self.delete_account_btn.setEnabled(not busy)
         self.upload_btn.setEnabled(not busy)
@@ -773,6 +838,10 @@ class SFTPPanel(QWidget):
         self.port_spin.setValue(22)
         self.pass_edit.clear()
         self.key_edit.clear()
+        self.use_socks5_check.setChecked(False)
+        self.socks_host_edit.setText("127.0.0.1")
+        self.socks_port_spin.setValue(1080)
+        self._update_socks5_controls(False)
         self.pages.setCurrentWidget(self.page_form)
 
     def _open_edit_form(self, name: str):
@@ -784,6 +853,10 @@ class SFTPPanel(QWidget):
         self.user_edit.setText(acc.get("username", ""))
         self.port_spin.setValue(int(acc.get("port", 22) or 22))
         self.key_edit.setText(acc.get("key_file", ""))
+        self.use_socks5_check.setChecked(bool(acc.get("use_socks5", False)))
+        self.socks_host_edit.setText(str(acc.get("socks_host", "127.0.0.1")) or "127.0.0.1")
+        self.socks_port_spin.setValue(int(acc.get("socks_port", 1080) or 1080))
+        self._update_socks5_controls(self.use_socks5_check.isChecked())
         self.pass_edit.setText(load_password(sftp_password_id(acc["name"])))
         self.pages.setCurrentWidget(self.page_form)
 
@@ -796,6 +869,10 @@ class SFTPPanel(QWidget):
         self.user_edit.setText(acc.get("username", ""))
         self.port_spin.setValue(int(acc.get("port", 22) or 22))
         self.key_edit.setText(acc.get("key_file", ""))
+        self.use_socks5_check.setChecked(bool(acc.get("use_socks5", False)))
+        self.socks_host_edit.setText(str(acc.get("socks_host", "127.0.0.1")) or "127.0.0.1")
+        self.socks_port_spin.setValue(int(acc.get("socks_port", 1080) or 1080))
+        self._update_socks5_controls(self.use_socks5_check.isChecked())
         self.pass_edit.setText(load_password(sftp_password_id(acc["name"])))
         ok, _err = self._connect()
         if ok:
@@ -1045,6 +1122,9 @@ class SFTPPanel(QWidget):
             "username": user,
             "port": int(self.port_spin.value()),
             "key_file": self.key_edit.text().strip(),
+            "use_socks5": self.use_socks5_check.isChecked(),
+            "socks_host": self.socks_host_edit.text().strip() or "127.0.0.1",
+            "socks_port": int(self.socks_port_spin.value()),
         }
         found = False
         for i, acc in enumerate(self._accounts):
@@ -1099,6 +1179,9 @@ class SFTPPanel(QWidget):
         if not host or not user:
             QMessageBox.warning(self, "SFTP", "Host and Username are required.")
             return False, "Host and username are required."
+        use_socks5 = self.use_socks5_check.isChecked()
+        socks_host = self.socks_host_edit.text().strip() or "127.0.0.1"
+        socks_port = int(self.socks_port_spin.value())
         profile_name = self.account_name_edit.text().strip()
         ok = False
         err_msg: str | None = None
@@ -1112,20 +1195,9 @@ class SFTPPanel(QWidget):
                 self._rebuild_profile_grid_if_profiles_visible()
             self._yield_ui()
             self._append(f"⏱ Connection timeout: {timeout}s")
-            sock = socket.create_connection((host, int(self.port_spin.value())), timeout=timeout)
-            self._transport = paramiko.Transport(sock)
-            self._transport.banner_timeout = timeout
-            self._transport.auth_timeout = timeout
-            key_file = self.key_edit.text().strip()
-            password = self.pass_edit.text()
-            pkey = None
-            if key_file:
-                pkey = paramiko.RSAKey.from_private_key_file(
-                    os.path.expanduser(key_file), password=password or None
-                )
-                password = None
-            self._transport.connect(username=user, password=password or None, pkey=pkey)
-            self._sftp = paramiko.SFTPClient.from_transport(self._transport)
+            if use_socks5:
+                self._append(f"🧦 SOCKS5 enabled via {socks_host}:{socks_port}")
+            self._transport, self._sftp = self._open_client_from_params(self._sftp_connection_params())
             self._cwd = self._sftp.normalize(".")
             self.path_edit.setText(self._cwd)
             self._append(f"✅ Connected to {user}@{host}:{self.port_spin.value()}")
@@ -1338,7 +1410,14 @@ class SFTPPanel(QWidget):
             "password": self.pass_edit.text(),
             "key_file": self.key_edit.text().strip(),
             "timeout": int(self.timeout_spin.value()),
+            "use_socks5": self.use_socks5_check.isChecked(),
+            "socks_host": self.socks_host_edit.text().strip() or "127.0.0.1",
+            "socks_port": int(self.socks_port_spin.value()),
         }
+
+    def _update_socks5_controls(self, checked: bool):
+        self.socks_host_edit.setEnabled(checked and not self._busy)
+        self.socks_port_spin.setEnabled(checked and not self._busy)
 
     def _run_upload_job(self, params, paths, workers):
         run_upload_job(params, self._cwd, paths, workers, self._op_queue.put)
