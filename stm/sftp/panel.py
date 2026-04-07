@@ -24,10 +24,12 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QSpinBox,
     QStackedWidget,
     QStyle,
     QTextEdit,
+    QToolButton,
     QTreeWidget,
     QTreeWidgetItem,
     QVBoxLayout,
@@ -64,9 +66,15 @@ class SFTPPanel(QWidget):
     _COLOR_UPLOAD_BTN = "#2d9cdb"
     _COLOR_DOWNLOAD_BTN = "#5b6dee"
     _COLOR_DELETE_BTN = "#e74c3c"
-    _PROFILE_GRID_MIN_COLUMNS = 4
-    _PROFILE_GRID_MAX_COLUMNS = 8
-    _PROFILE_CARD_MIN_WIDTH = 180
+    _PROFILE_GRID_MIN_COLUMNS = 1
+    _PROFILE_GRID_MAX_COLUMNS = 3
+    _PROFILE_CARD_MIN_WIDTH = 260
+    _PROFILE_CARD_ICON_NAMES = (
+        "network-server",
+        "folder-remote",
+        "drive-harddisk",
+        "security-high",
+    )
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -79,13 +87,14 @@ class SFTPPanel(QWidget):
         self._op_thread: threading.Thread | None = None
         self._op_name: str | None = None
         self._file_progress_rows: dict[str, tuple[QTreeWidgetItem, QProgressBar]] = {}
-        self._pulse_on = True
-        self._cursor_on = True
+        # self._pulse_on = True
+        # self._cursor_on = True
+        self._connected_profile_name: str | None = None
         self._build_ui()
         self._load_accounts()
-        self._visual_timer = QTimer(self)
-        self._visual_timer.timeout.connect(self._tick_visuals)
-        self._visual_timer.start(650)
+        # self._visual_timer = QTimer(self)
+        # self._visual_timer.timeout.connect(self._tick_visuals)
+        # self._visual_timer.start(650)
 
     def _build_ui(self):
         root = QVBoxLayout(self)
@@ -128,7 +137,7 @@ class SFTPPanel(QWidget):
         self.connect_btn = QPushButton("CONNECT")
         self.disconnect_btn = QPushButton("DISCONNECT")
         self.test_btn = QPushButton("TEST_ENDPOINT")
-        self.add_profile_btn = QPushButton("ADD_SFTP")
+        self.add_profile_btn = QPushButton("ADD SFTP")
         self.back_profiles_btn = QPushButton("BACK_TO_PROFILES")
         self.cancel_form_btn = QPushButton("CANCEL")
         self.form_save_btn = QPushButton("SAVE_PROFILE")
@@ -156,12 +165,17 @@ class SFTPPanel(QWidget):
         profiles_layout.setContentsMargins(6, 6, 6, 6)
         profiles_top = QHBoxLayout()
         profiles_title = QLabel("SFTP PROFILES")
-        profiles_title.setStyleSheet("font-size:20px;font-weight:800;letter-spacing:1px;color:#ece9f7;")
-        profiles_sub = QLabel("SECURE_FILE_TRANSFER_MANAGEMENT")
-        profiles_sub.setStyleSheet("font-size:11px;color:#aca9b6;")
+        profiles_title.setStyleSheet(
+            "font-size:32px;font-weight:700;color:#ece9f7;letter-spacing:-0.5px;"
+        )
+        # profiles_sub = QLabel(
+        #     "Secure File Transfer Management Protocol Cluster. Encrypted tunneling active."
+        # )
+        # profiles_sub.setWordWrap(True)
+        # profiles_sub.setStyleSheet("font-size:13px;color:#aca9b6;max-width:420px;")
         title_col = QVBoxLayout()
         title_col.addWidget(profiles_title)
-        title_col.addWidget(profiles_sub)
+        # title_col.addWidget(profiles_sub)
         profiles_top.addLayout(title_col)
         profiles_top.addStretch()
         profiles_top.addWidget(self.add_profile_btn)
@@ -176,6 +190,47 @@ class SFTPPanel(QWidget):
         profile_scroll.setWidgetResizable(True)
         profile_scroll.setWidget(self.profile_grid_widget)
         profiles_layout.addWidget(profile_scroll, 1)
+
+        stats_wrap = QWidget()
+        stats_layout = QGridLayout(stats_wrap)
+        stats_layout.setContentsMargins(0, 16, 0, 0)
+        stats_layout.setHorizontalSpacing(16)
+        stats_layout.setVerticalSpacing(0)
+
+        def _stat_cell(title: str, value: str, accent: str) -> tuple[QFrame, QLabel]:
+            box = QFrame()
+            box.setStyleSheet("background:#191924;border-radius:2px;padding:0px;")
+            bl = QVBoxLayout(box)
+            bl.setContentsMargins(12, 10, 12, 10)
+            t = QLabel(title)
+            t.setStyleSheet(
+                "font-size:10px;color:#767480;font-weight:600;"
+                "letter-spacing:1px;text-transform:uppercase;border:none;background:transparent;"
+            )
+            v = QLabel(value)
+            v.setStyleSheet(
+                f"font-size:22px;font-weight:700;color:{accent};border:none;background:transparent;"
+            )
+            bl.addWidget(t)
+            bl.addWidget(v)
+            return box, v
+
+        # self._stat_active_box, self._stat_active_val = _stat_cell("Active Tunnels", "00", "#00fd93")
+        # self._stat_total_box, self._stat_total_val = _stat_cell("Total Profiles", "00", "#aca3ff")
+        # self._stat_latency_box, self._stat_latency_val = _stat_cell("Latency Avg", "—", "#ece9f7")
+        # self._stat_data_box, self._stat_data_val = _stat_cell("Data Shifted", "—", "#ece9f7")
+        # for c, w in enumerate(
+        #     (
+        #         self._stat_active_box,
+        #         self._stat_total_box,
+        #         self._stat_latency_box,
+        #         self._stat_data_box,
+        #     )
+        # ):
+            stats_layout.addWidget(w, 0, c)
+
+        profiles_layout.addWidget(stats_wrap)
+        # self._profile_active_pulse_labels: list[QLabel] = []
         self.pages.addWidget(self.page_profiles)
 
         # Page 2: Add/Edit profile form
@@ -443,11 +498,17 @@ class SFTPPanel(QWidget):
         self.connect_btn.setStyleSheet(
             "background:#00fd93;color:#004624;"
             "font-weight:800;"
-            "box-shadow:0 0 12px rgba(0,253,147,0.18);"
         )
         self.upload_btn.setStyleSheet(
             "background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #aca3ff,stop:1 #6f5fea);"
             "color:#1d007a;font-weight:800;"
+        )
+        self.add_profile_btn.setStyleSheet(
+            "QPushButton{background:#aca3ff;color:#000000;font-weight:800;padding:10px 22px;"
+            "border-radius:2px;border:none;font-size:11px;letter-spacing:0.5px;}"
+            "QPushButton:hover{background:#9e93ff;}"
+            "QPushButton:pressed{background:#8f83ff;}"
+            "QPushButton:disabled{background:#252532;color:#767480;}"
         )
 
     def _apply_button_icons(self):
@@ -665,17 +726,24 @@ class SFTPPanel(QWidget):
         self.up_btn.setEnabled(not busy)
         self.mkdir_btn.setEnabled(not busy)
 
-    def _tick_visuals(self):
-        self._pulse_on = not self._pulse_on
-        if hasattr(self, "ws_status_dot"):
-            if self._sftp is not None:
-                color = "#00fd93" if self._pulse_on else "#00ed89"
-                self.ws_status_dot.setStyleSheet(f"color:{color};font-size:11px;")
-            else:
-                self.ws_status_dot.setStyleSheet("color:#ff6e84;font-size:11px;")
-        if hasattr(self, "log_cursor"):
-            self._cursor_on = not self._cursor_on
-            self.log_cursor.setVisible(self._cursor_on)
+    # def _tick_visuals(self):
+    #     self._pulse_on = not self._pulse_on
+    #     if hasattr(self, "ws_status_dot"):
+    #         if self._sftp is not None:
+    #             color = "#00fd93" if self._pulse_on else "#00ed89"
+    #             self.ws_status_dot.setStyleSheet(f"color:{color};font-size:11px;")
+    #         else:
+    #             self.ws_status_dot.setStyleSheet("color:#ff6e84;font-size:11px;")
+    #     if hasattr(self, "log_cursor"):
+    #         self._cursor_on = not self._cursor_on
+    #         self.log_cursor.setVisible(self._cursor_on)
+    #     if hasattr(self, "_profile_active_pulse_labels"):
+    #         dot_color = "#00fd93" if self._pulse_on else "#00c97a"
+    #         for lbl in self._profile_active_pulse_labels:
+    #             lbl.setStyleSheet(
+    #                 f"min-width:8px;max-width:8px;min-height:8px;max-height:8px;"
+    #                 f"border-radius:4px;background:{dot_color};"
+    #             )
 
     def _position_transfers_overlay(self):
         if not hasattr(self, "transfers_overlay"):
@@ -729,73 +797,194 @@ class SFTPPanel(QWidget):
         self.key_edit.setText(acc.get("key_file", ""))
         self.pass_edit.setText(load_password(sftp_password_id(acc["name"])))
         if self._connect():
+            self._connected_profile_name = name
             self.active_profile_label.setText(f"CONNECTED TO: {name}")
             self.pages.setCurrentWidget(self.page_workspace)
 
+    def _update_profiles_stats(self):
+        if not hasattr(self, "_stat_active_val"):
+            return
+        tunnels = 1 if self._sftp is not None else 0
+        total = len(self._accounts)
+        self._stat_active_val.setText(f"{tunnels:02d}")
+        self._stat_total_val.setText(f"{total:02d}" if total < 100 else str(total))
+
+    def _profile_card_icon(self, idx: int) -> QIcon:
+        iname = self._PROFILE_CARD_ICON_NAMES[idx % len(self._PROFILE_CARD_ICON_NAMES)]
+        return QIcon.fromTheme(iname)
+
+    def _make_profile_action_button(self, text: str, variant: str) -> QPushButton:
+        btn = QPushButton(text)
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        if variant == "connect_active":
+            btn.setStyleSheet(
+                "QPushButton{background:#00fd93;color:#004624;font-size:11px;font-weight:800;"
+                "letter-spacing:1px;padding:8px 10px;border:none;border-radius:2px;}"
+                "QPushButton:hover{background:#00ed89;}"
+                "QPushButton:disabled{background:#252532;color:#767480;}"
+            )
+        elif variant == "connect":
+            btn.setStyleSheet(
+                "QPushButton{background:#252532;color:#ece9f7;font-size:11px;font-weight:800;"
+                "letter-spacing:1px;padding:8px 10px;border:none;border-radius:2px;}"
+                "QPushButton:hover{background:#00fd93;color:#004624;}"
+                "QPushButton:disabled{background:#1a1a24;color:#767480;}"
+            )
+        elif variant == "edit":
+            btn.setStyleSheet(
+                "QPushButton{background:transparent;color:#aca3ff;font-size:11px;font-weight:800;"
+                "letter-spacing:1px;padding:8px 12px;border:1px solid #484752;border-radius:2px;}"
+                "QPushButton:hover{background:rgba(172,163,255,0.12);}"
+            )
+        elif variant == "delete":
+            btn.setStyleSheet(
+                "QPushButton{background:transparent;color:#ff6e84;font-size:11px;font-weight:800;"
+                "letter-spacing:1px;padding:8px 12px;border:1px solid rgba(255,110,132,0.35);"
+                "border-radius:2px;}"
+                "QPushButton:hover{background:rgba(255,110,132,0.12);}"
+            )
+        return btn
+
+    def _make_profile_dashboard_card(
+        self,
+        name: str,
+        host: str,
+        port: int,
+        user: str,
+        idx: int,
+        is_active_tunnel: bool,
+    ) -> QFrame:
+        card = QFrame()
+        card.setObjectName("SftpProfileCard")
+        card.setMinimumWidth(self._PROFILE_CARD_MIN_WIDTH)
+        card.setMinimumHeight(188)
+        card.setToolTip(f"{user}@{host}:{port}")
+        card.setStyleSheet(
+            "QFrame#SftpProfileCard{background:#12121d;border:none;border-radius:2px;}"
+            "QFrame#SftpProfileCard:hover{background:#1f1e2b;}"
+        )
+        outer = QVBoxLayout(card)
+        outer.setContentsMargins(20, 18, 20, 18)
+        outer.setSpacing(0)
+
+        # if is_active_tunnel:
+        #     top = QHBoxLayout()
+        #     top.addStretch()
+        #     badge = QFrame()
+        #     badge.setStyleSheet(
+        #         "QFrame{background:#006d3c;border:none;border-radius:10px;padding:0px;}"
+        #     )
+        #     bl = QHBoxLayout(badge)
+        #     bl.setContentsMargins(8, 4, 10, 4)
+        #     bl.setSpacing(6)
+            # dot = QLabel()
+            # dot_color = "#00fd93" if self._pulse_on else "#00c97a"
+            # dot.setStyleSheet(
+            #     f"min-width:8px;max-width:8px;min-height:8px;max-height:8px;"
+            #     f"border-radius:4px;background:{dot_color};"
+            # )
+            # self._profile_active_pulse_labels.append(dot)
+            # active_lbl = QLabel("ACTIVE")
+            # active_lbl.setStyleSheet(
+            #     "font-size:10px;font-weight:800;color:#00fd93;letter-spacing:1px;border:none;"
+            #     "background:transparent;"
+            # )
+            # # bl.addWidget(dot)
+            # bl.addWidget(active_lbl)
+            # top.addWidget(badge, 0, Qt.AlignRight | Qt.AlignTop)
+            # outer.addLayout(top)
+
+        icon_lbl = QLabel()
+        icon_lbl.setFixedSize(36, 36)
+        ic = self._profile_card_icon(idx)
+        if not ic.isNull():
+            icon_lbl.setPixmap(ic.pixmap(QSize(32, 32)))
+        else:
+            icon_lbl.setText("◇")
+            icon_lbl.setAlignment(Qt.AlignCenter)
+        icon_lbl.setStyleSheet(
+            f"color:{'#aca3ff' if is_active_tunnel else '#767480'};background:transparent;"
+            "font-size:26px;"
+        )
+        outer.addWidget(icon_lbl)
+
+        title = QLabel(name)
+        title.setStyleSheet(
+            "font-size:19px;font-weight:700;color:#ece9f7;background:transparent;border:none;"
+        )
+        outer.addWidget(title)
+        sub = QLabel(f"{host}:{port}")
+        sub.setStyleSheet(
+            "font-size:12px;color:#767480;background:transparent;border:none;margin-top:2px;"
+        )
+        outer.addWidget(sub)
+        outer.addStretch()
+
+        row = QHBoxLayout()
+        row.setSpacing(10)
+        connect_variant = "connect_active" if is_active_tunnel else "connect"
+        connect_btn = self._make_profile_action_button("Connect", connect_variant)
+        connect_btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        edit_btn = self._make_profile_action_button("Edit", "edit")
+        del_btn = self._make_profile_action_button("Delete", "delete")
+        connect_btn.clicked.connect(lambda _=False, n=name: self._connect_profile(n))
+        edit_btn.clicked.connect(lambda _=False, n=name: self._open_edit_form(n))
+        del_btn.clicked.connect(lambda _=False, n=name: self._delete_account(n))
+        row.addWidget(connect_btn, 1)
+        row.addWidget(edit_btn, 0)
+        row.addWidget(del_btn, 0)
+        outer.addLayout(row)
+        return card
+
+    def _make_new_profile_tile(self) -> QToolButton:
+        btn = QToolButton()
+        btn.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        btn.setMinimumHeight(188)
+        btn.setMinimumWidth(self._PROFILE_CARD_MIN_WIDTH)
+        ic = QIcon.fromTheme("list-add")
+        if not ic.isNull():
+            btn.setIcon(ic)
+            btn.setIconSize(QSize(48, 48))
+        btn.setText("NEW_PROFILE_INSTANCE")
+        btn.setStyleSheet(
+            "QToolButton{background:transparent;border:2px dashed rgba(72,71,82,0.45);"
+            "border-radius:2px;color:#767480;font-size:11px;font-weight:800;letter-spacing:1px;"
+            "padding:20px;}"
+            "QToolButton:hover{border-color:rgba(172,163,255,0.55);color:#aca3ff;"
+            "background:rgba(172,163,255,0.05);}"
+        )
+        btn.clicked.connect(self._open_add_form)
+        return btn
+
     def _rebuild_profile_grid(self):
+        # self._profile_active_pulse_labels.clear()
         while self.profile_grid_layout.count():
             item = self.profile_grid_layout.takeAt(0)
             w = item.widget()
             if w:
                 w.deleteLater()
         cols = self._profile_grid_columns()
+        is_connected = self._sftp is not None
+        active_name = self._connected_profile_name
         for idx, acc in enumerate(self._accounts):
             name = acc["name"]
             host = acc.get("host", "")
             user = acc.get("username", "")
             port = int(acc.get("port", 22) or 22)
-            card = QGroupBox(name)
-            card.setMinimumWidth(self._PROFILE_CARD_MIN_WIDTH)
-            card.setToolTip(f"{user}@{host}:{port}")
-            card.setStyleSheet(
-                "QGroupBox {background:#191924;border:1px solid #252532;color:#aca3ff;font-weight:800;}"
-            )
-            card_layout = QVBoxLayout(card)
-            meta = QLabel(f"{user}@{host}:{port}")
-            meta.setStyleSheet("color:#aca9b6;font-size:11px;")
-            card_layout.addWidget(meta)
-            row = QHBoxLayout()
-            connect_btn = self._make_icon_button(
-                "network-connect",
-                self._COLOR_CONNECT_BTN,
-                "Connect profile",
-            )
-            edit_btn = self._make_icon_button(
-                "document-edit",
-                "#5b6dee",
-                "Edit profile",
-            )
-            del_btn = self._make_icon_button(
-                "edit-delete",
-                self._COLOR_DISCONNECT_BTN,
-                "Delete profile",
-            )
-            connect_btn.clicked.connect(lambda _=False, n=name: self._connect_profile(n))
-            edit_btn.clicked.connect(lambda _=False, n=name: self._open_edit_form(n))
-            del_btn.clicked.connect(lambda _=False, n=name: self._delete_account(n))
-            row.addWidget(connect_btn)
-            row.addWidget(edit_btn)
-            row.addWidget(del_btn)
-            row.addStretch()
-            card_layout.addLayout(row)
+            is_active = bool(is_connected and active_name == name)
+            card = self._make_profile_dashboard_card(name, host, port, user, idx, is_active)
             self.profile_grid_layout.addWidget(card, idx // cols, idx % cols)
+        add_i = len(self._accounts)
+        self.profile_grid_layout.addWidget(self._make_new_profile_tile(), add_i // cols, add_i % cols)
+        self._update_profiles_stats()
 
     def _profile_grid_columns(self):
         width = max(self.profile_grid_widget.width(), 1)
         cols_by_width = max(1, width // self._PROFILE_CARD_MIN_WIDTH)
         return min(self._PROFILE_GRID_MAX_COLUMNS, max(self._PROFILE_GRID_MIN_COLUMNS, cols_by_width))
-
-    @staticmethod
-    def _make_icon_button(icon_name: str, bg: str, tooltip: str):
-        btn = QPushButton("")
-        btn.setFixedSize(32, 32)
-        btn.setStyleSheet(f"background-color:{bg};color:#fff;padding:4px;")
-        btn.setToolTip(tooltip)
-        icon = QIcon.fromTheme(icon_name)
-        if not icon.isNull():
-            btn.setIcon(icon)
-            btn.setIconSize(QSize(16, 16))
-        return btn
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -897,6 +1086,8 @@ class SFTPPanel(QWidget):
             self.path_edit.setText(self._cwd)
             self._append(f"✅ Connected to {user}@{host}:{self.port_spin.value()}")
             self._refresh()
+            nm = self.account_name_edit.text().strip()
+            self._connected_profile_name = nm if nm else None
             return True
         except socket.timeout:
             self._append("❌ Connect timeout. Host unreachable or SSH service too slow.")
@@ -984,10 +1175,12 @@ class SFTPPanel(QWidget):
             pass
         self._sftp = None
         self._transport = None
+        self._connected_profile_name = None
         self.active_profile_label.setText("CONNECTED TO: NONE")
         self._set_busy(False)
         if show_profiles:
             self.pages.setCurrentWidget(self.page_profiles)
+            self._rebuild_profile_grid()
 
     def _goto_path(self):
         if not self._ensure_connected():
