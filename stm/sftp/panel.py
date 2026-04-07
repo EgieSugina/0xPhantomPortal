@@ -4,15 +4,13 @@ import queue
 import socket
 import stat
 import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QBrush, QColor, QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
-    QComboBox,
     QFileDialog,
     QFormLayout,
     QGridLayout,
@@ -22,9 +20,11 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
-    QPushButton,
     QProgressBar,
+    QPushButton,
+    QScrollArea,
     QSpinBox,
+    QStackedWidget,
     QStyle,
     QTextEdit,
     QTreeWidget,
@@ -33,10 +33,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from .config import PARAMIKO_OK
-from .config import (
-    STATUS_DISCONNECTED,
-    THEME_PRIMARY,
+from ..config import PARAMIKO_OK
+from ..config import (
     delete_password,
     load_password,
     load_sftp_accounts,
@@ -44,39 +42,11 @@ from .config import (
     save_sftp_accounts,
     sftp_password_id,
 )
+from .jobs import collect_upload_tasks, open_client_from_params, run_delete_job, run_upload_job
+from .widgets import SFTPDropTree
 
 if PARAMIKO_OK:
     import paramiko
-
-
-class SFTPDropTree(QTreeWidget):
-    paths_dropped = Signal(list)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAcceptDrops(True)
-        self.viewport().setAcceptDrops(True)
-
-    def dragEnterEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-            return
-        super().dragEnterEvent(event)
-
-    def dragMoveEvent(self, event):
-        if event.mimeData().hasUrls():
-            event.acceptProposedAction()
-            return
-        super().dragMoveEvent(event)
-
-    def dropEvent(self, event):
-        if event.mimeData().hasUrls():
-            paths = [u.toLocalFile() for u in event.mimeData().urls() if u.isLocalFile()]
-            if paths:
-                self.paths_dropped.emit(paths)
-            event.acceptProposedAction()
-            return
-        super().dropEvent(event)
 
 
 class SFTPPanel(QWidget):
@@ -93,6 +63,9 @@ class SFTPPanel(QWidget):
     _COLOR_UPLOAD_BTN = "#2d9cdb"
     _COLOR_DOWNLOAD_BTN = "#5b6dee"
     _COLOR_DELETE_BTN = "#e74c3c"
+    _PROFILE_GRID_MIN_COLUMNS = 4
+    _PROFILE_GRID_MAX_COLUMNS = 8
+    _PROFILE_CARD_MIN_WIDTH = 180
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -104,15 +77,16 @@ class SFTPPanel(QWidget):
         self._op_queue: queue.Queue = queue.Queue()
         self._op_thread: threading.Thread | None = None
         self._op_name: str | None = None
+        self._file_progress_rows: dict[str, tuple[QTreeWidgetItem, QProgressBar]] = {}
         self._build_ui()
         self._load_accounts()
 
     def _build_ui(self):
         root = QVBoxLayout(self)
-        conn = QGroupBox("SFTP Connection")
-        conn_layout = QVBoxLayout(conn)
-        conn_layout.setContentsMargins(12, 12, 12, 12)
-        conn_layout.setSpacing(8)
+        self.pages = QStackedWidget()
+        root.addWidget(self.pages, 1)
+
+        # Shared form widgets (used in Add/Edit and connect flow)
         self.host_edit = QLineEdit()
         self.host_edit.setPlaceholderText("example.com")
         self.host_edit.setClearButtonEnabled(True)
@@ -122,13 +96,10 @@ class SFTPPanel(QWidget):
         self.account_name_edit = QLineEdit()
         self.account_name_edit.setPlaceholderText("my-prod-server")
         self.account_name_edit.setClearButtonEnabled(True)
-        self.account_combo = QComboBox()
-        self.account_combo.setMinimumWidth(220)
-        self.account_combo.currentIndexChanged.connect(self._on_account_selected)
         self.save_account_btn = QPushButton("Save Account")
         self.delete_account_btn = QPushButton("Delete Account")
         self.save_account_btn.clicked.connect(self._save_account)
-        self.delete_account_btn.clicked.connect(self._delete_account)
+        self.delete_account_btn.clicked.connect(lambda: self._delete_account())
         self.port_spin = QSpinBox()
         self.port_spin.setRange(1, 65535)
         self.port_spin.setValue(22)
@@ -149,26 +120,62 @@ class SFTPPanel(QWidget):
         self.connect_btn = QPushButton("Connect")
         self.disconnect_btn = QPushButton("Disconnect")
         self.test_btn = QPushButton("Test Connection")
+        self.add_profile_btn = QPushButton("Add SFTP")
+        self.back_profiles_btn = QPushButton("Back to Profiles")
+        self.cancel_form_btn = QPushButton("Cancel")
+        self.form_save_btn = QPushButton("Save Profile")
+        self.ws_disconnect_btn = QPushButton("Disconnect")
         self.connect_btn.setStyleSheet(f"background-color:{self._COLOR_CONNECT_BTN};color:#ffffff;")
         self.disconnect_btn.setStyleSheet(f"background-color:{self._COLOR_DISCONNECT_BTN};color:#ffffff;")
+        self.ws_disconnect_btn.setStyleSheet(f"background-color:{self._COLOR_DISCONNECT_BTN};color:#ffffff;")
         self.test_btn.setStyleSheet("background-color:#f39c12;color:#ffffff;")
         self.disconnect_btn.setEnabled(False)
         self.connect_btn.clicked.connect(self._connect)
-        self.disconnect_btn.clicked.connect(self._disconnect)
+        self.disconnect_btn.clicked.connect(lambda: self._disconnect(show_profiles=False))
+        self.ws_disconnect_btn.clicked.connect(lambda: self._disconnect(show_profiles=True))
         self.test_btn.clicked.connect(self._test_connection)
+        self.add_profile_btn.clicked.connect(self._open_add_form)
+        self.back_profiles_btn.clicked.connect(self._show_profiles_page)
+        self.cancel_form_btn.clicked.connect(self._show_profiles_page)
+        self.form_save_btn.clicked.connect(self._save_account)
         self.conn_status = QLabel("● Disconnected")
         self.conn_status.setStyleSheet(f"color:{self._COLOR_STATUS_OFF};font-weight:700;")
+        self.active_profile_label = QLabel("No active profile")
+
+        # Page 1: Profiles grid
+        self.page_profiles = QWidget()
+        profiles_layout = QVBoxLayout(self.page_profiles)
+        profiles_top = QHBoxLayout()
+        profiles_top.addWidget(QLabel("SFTP Profiles"))
+        profiles_top.addStretch()
+        profiles_top.addWidget(self.add_profile_btn)
+        profiles_layout.addLayout(profiles_top)
+
+        self.profile_grid_widget = QWidget()
+        self.profile_grid_layout = QGridLayout(self.profile_grid_widget)
+        self.profile_grid_layout.setHorizontalSpacing(10)
+        self.profile_grid_layout.setVerticalSpacing(10)
+        self.profile_grid_layout.setContentsMargins(0, 0, 0, 0)
+        profile_scroll = QScrollArea()
+        profile_scroll.setWidgetResizable(True)
+        profile_scroll.setWidget(self.profile_grid_widget)
+        profiles_layout.addWidget(profile_scroll, 1)
+        self.pages.addWidget(self.page_profiles)
+
+        # Page 2: Add/Edit profile form
+        self.page_form = QWidget()
+        form_page_layout = QVBoxLayout(self.page_form)
+        form_header = QHBoxLayout()
+        form_header.addWidget(QLabel("SFTP Profile Form"))
+        form_header.addStretch()
+        form_header.addWidget(self.cancel_form_btn)
+        form_header.addWidget(self.form_save_btn)
+        form_page_layout.addLayout(form_header)
 
         profile_box = QGroupBox("Profile")
         profile_form = QFormLayout(profile_box)
         profile_form.setLabelAlignment(Qt.AlignRight)
-        row_acc = QHBoxLayout()
-        row_acc.setSpacing(6)
-        row_acc.addWidget(self.account_combo, 1)
-        row_acc.addWidget(self.save_account_btn)
-        row_acc.addWidget(self.delete_account_btn)
         profile_form.addRow("Account name:", self.account_name_edit)
-        profile_form.addRow("Saved accounts:", row_acc)
 
         server_box = QGroupBox("Server")
         server_form = QFormLayout(server_box)
@@ -185,13 +192,13 @@ class SFTPPanel(QWidget):
         auth_form.addRow("Identity key:", self.key_edit)
         auth_form.addRow("Max upload workers:", self.worker_spin)
 
-        grid = QGridLayout()
-        grid.setHorizontalSpacing(10)
-        grid.setVerticalSpacing(8)
-        grid.addWidget(profile_box, 0, 0)
-        grid.addWidget(server_box, 0, 1)
-        grid.addWidget(auth_box, 1, 0, 1, 2)
-        conn_layout.addLayout(grid)
+        form_grid = QGridLayout()
+        form_grid.setHorizontalSpacing(10)
+        form_grid.setVerticalSpacing(8)
+        form_grid.addWidget(profile_box, 0, 0)
+        form_grid.addWidget(server_box, 0, 1)
+        form_grid.addWidget(auth_box, 1, 0, 1, 2)
+        form_page_layout.addLayout(form_grid)
 
         row_btn = QHBoxLayout()
         row_btn.setSpacing(8)
@@ -200,9 +207,18 @@ class SFTPPanel(QWidget):
         row_btn.addWidget(self.test_btn)
         row_btn.addWidget(self.connect_btn)
         row_btn.addWidget(self.disconnect_btn)
-        conn_layout.addLayout(row_btn)
-        root.addWidget(conn)
+        form_page_layout.addLayout(row_btn)
+        self.pages.addWidget(self.page_form)
 
+        # Page 3: Connected workspace
+        self.page_workspace = QWidget()
+        ws_layout = QVBoxLayout(self.page_workspace)
+        ws_header = QHBoxLayout()
+        ws_header.addWidget(self.active_profile_label)
+        ws_header.addStretch()
+        ws_header.addWidget(self.back_profiles_btn)
+        ws_header.addWidget(self.ws_disconnect_btn)
+        ws_layout.addLayout(ws_header)
         nav = QHBoxLayout()
         self.path_edit = QLineEdit(".")
         self.path_edit.returnPressed.connect(self._goto_path)
@@ -217,15 +233,15 @@ class SFTPPanel(QWidget):
         nav.addWidget(self.up_btn)
         nav.addWidget(self.refresh_btn)
         nav.addWidget(self.mkdir_btn)
-        root.addLayout(nav)
+        ws_layout.addLayout(nav)
 
         self.tree = SFTPDropTree()
         self.tree.setHeaderLabels(["Name", "Type", "Size", "Modified"])
         self.tree.header().setStretchLastSection(False)
-        self.tree.setColumnWidth(0, 380)  # Name
-        self.tree.setColumnWidth(1, 90)   # Type
-        self.tree.setColumnWidth(2, 110)  # Size
-        self.tree.setColumnWidth(3, 170)  # Modified
+        self.tree.setColumnWidth(0, 380)
+        self.tree.setColumnWidth(1, 90)
+        self.tree.setColumnWidth(2, 110)
+        self.tree.setColumnWidth(3, 170)
         self.tree.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.tree.setStyleSheet(
             "QTreeWidget::item{padding:2px 0;}"
@@ -233,7 +249,7 @@ class SFTPPanel(QWidget):
         )
         self.tree.itemDoubleClicked.connect(self._open_item)
         self.tree.paths_dropped.connect(self._upload_local_paths)
-        root.addWidget(self.tree, 1)
+        ws_layout.addWidget(self.tree, 1)
 
         actions = QHBoxLayout()
         self.upload_btn = QPushButton("Upload Files/Folder")
@@ -249,30 +265,41 @@ class SFTPPanel(QWidget):
         actions.addWidget(self.download_btn)
         actions.addWidget(self.delete_btn)
         actions.addStretch()
-        root.addLayout(actions)
+        ws_layout.addLayout(actions)
 
         self.drop_hint = QLabel("Tip: You can drag and drop file/folder here to upload.")
         self.drop_hint.setStyleSheet("color:#9fc3ff;font-style:italic;")
-        root.addWidget(self.drop_hint)
+        ws_layout.addWidget(self.drop_hint)
 
         self.progress_label = QLabel("")
         self.progress = QProgressBar()
         self.progress.setVisible(False)
         self.progress.setTextVisible(True)
-        root.addWidget(self.progress_label)
-        root.addWidget(self.progress)
+        ws_layout.addWidget(self.progress_label)
+        ws_layout.addWidget(self.progress)
 
         self.log = QTextEdit()
         self.log.setReadOnly(True)
-        self.log.setMaximumHeight(110)
-        root.addWidget(self.log)
+        self.log.setMinimumHeight(110)
+        self.file_progress_tree = QTreeWidget()
+        self.file_progress_tree.setHeaderLabels(["File", "Progress", "Status"])
+        self.file_progress_tree.setColumnWidth(0, 220)
+        self.file_progress_tree.setColumnWidth(1, 130)
+        self.file_progress_tree.setColumnWidth(2, 90)
+        self.file_progress_tree.setMinimumHeight(110)
+
+        bottom_split = QHBoxLayout()
+        bottom_split.addWidget(self.log, 1)
+        bottom_split.addWidget(self.file_progress_tree, 1)
+        ws_layout.addLayout(bottom_split)
+        self.pages.addWidget(self.page_workspace)
+        self.pages.setCurrentWidget(self.page_profiles)
         style = QApplication.style()
         self._folder_icon = style.standardIcon(QStyle.SP_DirIcon) if style else QIcon()
         self._file_icon = style.standardIcon(QStyle.SP_FileIcon) if style else QIcon()
         self._apply_button_icons()
         if not PARAMIKO_OK:
             self._append("❌ paramiko not installed. Run: pip install paramiko")
-            # Keep button clickable so user gets explicit error dialog.
 
     def _apply_button_icons(self):
         def set_theme_icon(button: QPushButton, icon_name: str):
@@ -282,7 +309,12 @@ class SFTPPanel(QWidget):
 
         set_theme_icon(self.connect_btn, "network-connect")
         set_theme_icon(self.disconnect_btn, "network-disconnect")
+        set_theme_icon(self.ws_disconnect_btn, "network-disconnect")
         set_theme_icon(self.test_btn, "network-wired")
+        set_theme_icon(self.add_profile_btn, "list-add")
+        set_theme_icon(self.form_save_btn, "document-save")
+        set_theme_icon(self.cancel_form_btn, "go-previous")
+        set_theme_icon(self.back_profiles_btn, "go-previous")
         set_theme_icon(self.save_account_btn, "document-save")
         set_theme_icon(self.delete_account_btn, "edit-delete")
         set_theme_icon(self.refresh_btn, "view-refresh")
@@ -309,6 +341,43 @@ class SFTPPanel(QWidget):
             return
         self.progress.setValue(max(0, min(value, self.progress.maximum())))
         self._yield_ui()
+
+    def _reset_file_progress_view(self):
+        self.file_progress_tree.clear()
+        self._file_progress_rows.clear()
+
+    def _ensure_file_progress_row(self, file_id: str, file_label: str):
+        row = self._file_progress_rows.get(file_id)
+        if row:
+            return row
+        item = QTreeWidgetItem([file_label, "", "Queued"])
+        bar = QProgressBar()
+        bar.setRange(0, 100)
+        bar.setValue(0)
+        self.file_progress_tree.addTopLevelItem(item)
+        self.file_progress_tree.setItemWidget(item, 1, bar)
+        self._file_progress_rows[file_id] = (item, bar)
+        return item, bar
+
+    def _update_file_progress(self, file_id: str, sent: int, total: int):
+        item, bar = self._ensure_file_progress_row(file_id, file_id)
+        base = max(int(total or 0), 1)
+        pct = int((int(sent) * 100) / base)
+        bar.setValue(max(0, min(100, pct)))
+        item.setText(2, f"{pct}%")
+
+    def _finish_file_progress(self, file_id: str, ok: bool, status_text: str):
+        item_bar = self._file_progress_rows.get(file_id)
+        if not item_bar:
+            return
+        item, bar = item_bar
+        if ok:
+            bar.setValue(100)
+            item.setText(2, "Done")
+        else:
+            item.setText(2, "Failed")
+        if status_text and not ok:
+            item.setToolTip(2, status_text)
 
     def _set_progress_total(self, total: int, label: str | None = None):
         total = max(total, 1)
@@ -351,6 +420,15 @@ class SFTPPanel(QWidget):
             elif kind == "progress":
                 _, done = event
                 self._set_progress(done)
+            elif kind == "file_progress_init":
+                _, file_id, file_label = event
+                self._ensure_file_progress_row(file_id, file_label)
+            elif kind == "file_progress":
+                _, file_id, sent, total = event
+                self._update_file_progress(file_id, sent, total)
+            elif kind == "file_progress_done":
+                _, file_id, ok, status_text = event
+                self._finish_file_progress(file_id, bool(ok), str(status_text))
             elif kind == "error":
                 self._append(f"❌ {event[1]}")
             elif kind == "done":
@@ -368,7 +446,6 @@ class SFTPPanel(QWidget):
             QTimer.singleShot(40, self._poll_background_job)
             return
         if self._op_name is not None:
-            # Safety cleanup if thread exits unexpectedly without done event.
             self._end_progress()
             self._set_busy(False)
             self._op_name = None
@@ -376,23 +453,7 @@ class SFTPPanel(QWidget):
 
     @staticmethod
     def _open_client_from_params(params):
-        timeout = int(params.get("timeout", 8) or 8)
-        sock = socket.create_connection(
-            (params["host"], params["port"]),
-            timeout=timeout,
-        )
-        transport = paramiko.Transport(sock)
-        transport.banner_timeout = timeout
-        transport.auth_timeout = timeout
-        password = params.get("password") or None
-        pkey = None
-        if params.get("key_file"):
-            pkey = paramiko.RSAKey.from_private_key_file(
-                os.path.expanduser(params["key_file"]), password=password
-            )
-            password = None
-        transport.connect(username=params["username"], password=password, pkey=pkey)
-        return transport, paramiko.SFTPClient.from_transport(transport)
+        return open_client_from_params(params)
 
     @staticmethod
     def _yield_ui():
@@ -413,9 +474,16 @@ class SFTPPanel(QWidget):
             self.conn_status.setStyleSheet(f"color:{self._COLOR_STATUS_OFF};font-weight:700;")
         self.connect_btn.setEnabled(not busy and PARAMIKO_OK and self._sftp is None)
         self.disconnect_btn.setEnabled(not busy and self._sftp is not None)
+        self.ws_disconnect_btn.setEnabled(not busy and self._sftp is not None)
         self.test_btn.setEnabled(not busy and PARAMIKO_OK)
+        self.add_profile_btn.setEnabled(not busy)
+        self.back_profiles_btn.setEnabled(not busy)
+        self.cancel_form_btn.setEnabled(not busy)
+        self.form_save_btn.setEnabled(not busy)
         self.timeout_spin.setEnabled(not busy)
         self.worker_spin.setEnabled(not busy)
+        self.save_account_btn.setEnabled(not busy)
+        self.delete_account_btn.setEnabled(not busy)
         self.upload_btn.setEnabled(not busy)
         self.download_btn.setEnabled(not busy)
         self.delete_btn.setEnabled(not busy)
@@ -425,18 +493,24 @@ class SFTPPanel(QWidget):
 
     def _load_accounts(self):
         self._accounts = load_sftp_accounts()
-        self.account_combo.blockSignals(True)
-        self.account_combo.clear()
-        self.account_combo.addItem("(new account)")
-        for acc in self._accounts:
-            self.account_combo.addItem(acc["name"])
-        self.account_combo.setCurrentIndex(0)
-        self.account_combo.blockSignals(False)
+        self._rebuild_profile_grid()
 
-    def _on_account_selected(self, idx: int):
-        if idx <= 0:
+    def _show_profiles_page(self):
+        if self._busy:
             return
-        name = self.account_combo.currentText().strip()
+        self.pages.setCurrentWidget(self.page_profiles)
+        self._rebuild_profile_grid()
+
+    def _open_add_form(self):
+        self.account_name_edit.clear()
+        self.host_edit.clear()
+        self.user_edit.clear()
+        self.port_spin.setValue(22)
+        self.pass_edit.clear()
+        self.key_edit.clear()
+        self.pages.setCurrentWidget(self.page_form)
+
+    def _open_edit_form(self, name: str):
         acc = next((a for a in self._accounts if a["name"] == name), None)
         if not acc:
             return
@@ -446,6 +520,85 @@ class SFTPPanel(QWidget):
         self.port_spin.setValue(int(acc.get("port", 22) or 22))
         self.key_edit.setText(acc.get("key_file", ""))
         self.pass_edit.setText(load_password(sftp_password_id(acc["name"])))
+        self.pages.setCurrentWidget(self.page_form)
+
+    def _connect_profile(self, name: str):
+        acc = next((a for a in self._accounts if a["name"] == name), None)
+        if not acc:
+            return
+        self.account_name_edit.setText(acc["name"])
+        self.host_edit.setText(acc.get("host", ""))
+        self.user_edit.setText(acc.get("username", ""))
+        self.port_spin.setValue(int(acc.get("port", 22) or 22))
+        self.key_edit.setText(acc.get("key_file", ""))
+        self.pass_edit.setText(load_password(sftp_password_id(acc["name"])))
+        if self._connect():
+            self.active_profile_label.setText(f"Connected profile: {name}")
+            self.pages.setCurrentWidget(self.page_workspace)
+
+    def _rebuild_profile_grid(self):
+        while self.profile_grid_layout.count():
+            item = self.profile_grid_layout.takeAt(0)
+            w = item.widget()
+            if w:
+                w.deleteLater()
+        cols = self._profile_grid_columns()
+        for idx, acc in enumerate(self._accounts):
+            name = acc["name"]
+            host = acc.get("host", "")
+            user = acc.get("username", "")
+            port = int(acc.get("port", 22) or 22)
+            card = QGroupBox(name)
+            card.setMinimumWidth(self._PROFILE_CARD_MIN_WIDTH)
+            card.setToolTip(f"{user}@{host}:{port}")
+            card_layout = QVBoxLayout(card)
+            row = QHBoxLayout()
+            connect_btn = self._make_icon_button(
+                "network-connect",
+                self._COLOR_CONNECT_BTN,
+                "Connect profile",
+            )
+            edit_btn = self._make_icon_button(
+                "document-edit",
+                "#5b6dee",
+                "Edit profile",
+            )
+            del_btn = self._make_icon_button(
+                "edit-delete",
+                self._COLOR_DISCONNECT_BTN,
+                "Delete profile",
+            )
+            connect_btn.clicked.connect(lambda _=False, n=name: self._connect_profile(n))
+            edit_btn.clicked.connect(lambda _=False, n=name: self._open_edit_form(n))
+            del_btn.clicked.connect(lambda _=False, n=name: self._delete_account(n))
+            row.addWidget(connect_btn)
+            row.addWidget(edit_btn)
+            row.addWidget(del_btn)
+            row.addStretch()
+            card_layout.addLayout(row)
+            self.profile_grid_layout.addWidget(card, idx // cols, idx % cols)
+
+    def _profile_grid_columns(self):
+        width = max(self.profile_grid_widget.width(), 1)
+        cols_by_width = max(1, width // self._PROFILE_CARD_MIN_WIDTH)
+        return min(self._PROFILE_GRID_MAX_COLUMNS, max(self._PROFILE_GRID_MIN_COLUMNS, cols_by_width))
+
+    @staticmethod
+    def _make_icon_button(icon_name: str, bg: str, tooltip: str):
+        btn = QPushButton("")
+        btn.setFixedSize(32, 32)
+        btn.setStyleSheet(f"background-color:{bg};color:#fff;padding:4px;")
+        btn.setToolTip(tooltip)
+        icon = QIcon.fromTheme(icon_name)
+        if not icon.isNull():
+            btn.setIcon(icon)
+            btn.setIconSize(QSize(16, 16))
+        return btn
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "pages") and self.pages.currentWidget() is self.page_profiles:
+            self._rebuild_profile_grid()
 
     def _save_account(self):
         name = self.account_name_edit.text().strip()
@@ -479,12 +632,12 @@ class SFTPPanel(QWidget):
         else:
             delete_password(sftp_password_id(name))
         self._load_accounts()
-        self.account_combo.setCurrentText(name)
+        self.pages.setCurrentWidget(self.page_profiles)
         self._append(f"💾 Saved account: {name}")
 
-    def _delete_account(self):
-        name = self.account_name_edit.text().strip() or self.account_combo.currentText().strip()
-        if not name or name == "(new account)":
+    def _delete_account(self, name: str | None = None):
+        name = (name or self.account_name_edit.text().strip()).strip()
+        if not name:
             return
         if QMessageBox.question(self, "Delete account", f"Delete saved account '{name}'?") != QMessageBox.Yes:
             return
@@ -493,6 +646,7 @@ class SFTPPanel(QWidget):
         delete_password(sftp_password_id(name))
         self._load_accounts()
         self.account_name_edit.clear()
+        self.pages.setCurrentWidget(self.page_profiles)
         self._append(f"🗑 Deleted account: {name}")
 
     def _ensure_connected(self):
@@ -503,33 +657,27 @@ class SFTPPanel(QWidget):
 
     def _connect(self):
         if self._busy:
-            return
+            return False
         if not PARAMIKO_OK:
             QMessageBox.critical(
                 self,
                 "SFTP unavailable",
-                "Python package 'paramiko' is not installed.\n\n"
-                "Install it in your active environment:\n"
-                "pip install paramiko",
+                "Python package 'paramiko' is not installed.\n\nInstall it in your active environment:\npip install paramiko",
             )
-            return
+            return False
         host = self.host_edit.text().strip()
         user = self.user_edit.text().strip()
         if not host or not user:
             QMessageBox.warning(self, "SFTP", "Host and Username are required.")
-            return
+            return False
         timeout = int(self.timeout_spin.value())
         try:
             self._set_busy(True)
             self._append(f"🔌 Connecting to {user}@{host}:{self.port_spin.value()} ...")
             self._disconnect()
             self._append(f"⏱ Connection timeout: {timeout}s")
-            sock = socket.create_connection(
-                (host, int(self.port_spin.value())),
-                timeout=timeout,
-            )
+            sock = socket.create_connection((host, int(self.port_spin.value())), timeout=timeout)
             self._transport = paramiko.Transport(sock)
-            # Reduce the chance of long hangs on auth/banner failures.
             self._transport.banner_timeout = timeout
             self._transport.auth_timeout = timeout
             key_file = self.key_edit.text().strip()
@@ -546,24 +694,27 @@ class SFTPPanel(QWidget):
             self.path_edit.setText(self._cwd)
             self._append(f"✅ Connected to {user}@{host}:{self.port_spin.value()}")
             self._refresh()
+            return True
         except socket.timeout:
             self._append("❌ Connect timeout. Host unreachable or SSH service too slow.")
             self._disconnect()
+            return False
         except TimeoutError:
             self._append("❌ Connect timeout. Host unreachable or SSH service too slow.")
             self._disconnect()
+            return False
         except paramiko.ssh_exception.SSHException as e:
             msg = str(e)
             if "Error reading SSH protocol banner" in msg:
-                self._append(
-                    "❌ SSH banner timeout. Check host/port and ensure target is an SSH server."
-                )
+                self._append("❌ SSH banner timeout. Check host/port and ensure target is an SSH server.")
             else:
                 self._append(f"❌ SSH error: {msg}")
             self._disconnect()
+            return False
         except Exception as e:
             self._append(f"❌ Connect failed: {e}")
             self._disconnect()
+            return False
         finally:
             self._set_busy(False)
 
@@ -615,7 +766,7 @@ class SFTPPanel(QWidget):
                 pass
             self._set_busy(False)
 
-    def _disconnect(self):
+    def _disconnect(self, show_profiles: bool = False):
         if self._busy and self._sftp is None and self._transport is None:
             return
         try:
@@ -630,7 +781,10 @@ class SFTPPanel(QWidget):
             pass
         self._sftp = None
         self._transport = None
+        self.active_profile_label.setText("No active profile")
         self._set_busy(False)
+        if show_profiles:
+            self.pages.setCurrentWidget(self.page_profiles)
 
     def _goto_path(self):
         if not self._ensure_connected():
@@ -658,12 +812,14 @@ class SFTPPanel(QWidget):
                 if a.filename in (".", ".."):
                     continue
                 is_dir = stat.S_ISDIR(a.st_mode)
-                item = QTreeWidgetItem([
-                    a.filename,
-                    "dir" if is_dir else "file",
-                    "" if is_dir else str(a.st_size),
-                    datetime.fromtimestamp(a.st_mtime).strftime("%Y-%m-%d %H:%M"),
-                ])
+                item = QTreeWidgetItem(
+                    [
+                        a.filename,
+                        "dir" if is_dir else "file",
+                        "" if is_dir else str(a.st_size),
+                        datetime.fromtimestamp(a.st_mtime).strftime("%Y-%m-%d %H:%M"),
+                    ]
+                )
                 item.setData(0, Qt.UserRole, "dir" if is_dir else "file")
                 item.setIcon(0, self._folder_icon if is_dir else self._file_icon)
                 if is_dir:
@@ -709,29 +865,15 @@ class SFTPPanel(QWidget):
         if not self._ensure_connected():
             return
         self._append(f"⬆ Upload queue: {len(paths)} item(s)")
+        self._reset_file_progress_view()
         params = self._sftp_connection_params()
         params["cwd"] = self._cwd
-        self._start_background_job("upload", self._run_upload_job, params, list(paths), int(self.worker_spin.value()))
+        self._start_background_job(
+            "upload", self._run_upload_job, params, list(paths), int(self.worker_spin.value())
+        )
 
     def _collect_upload_tasks(self, paths):
-        dirs_to_create: set[str] = set()
-        file_tasks: list[tuple[str, str]] = []
-        for p in paths:
-            p = os.path.abspath(p)
-            if os.path.isdir(p):
-                remote_root = posixpath.join(self._cwd, os.path.basename(p))
-                dirs_to_create.add(remote_root)
-                for root, dirs, files in os.walk(p):
-                    rel = os.path.relpath(root, p).replace("\\", "/")
-                    remote_base = remote_root if rel == "." else posixpath.join(remote_root, rel)
-                    dirs_to_create.add(remote_base)
-                    for d in dirs:
-                        dirs_to_create.add(posixpath.join(remote_base, d))
-                    for f in files:
-                        file_tasks.append((os.path.join(root, f), posixpath.join(remote_base, f)))
-            elif os.path.isfile(p):
-                file_tasks.append((p, posixpath.join(self._cwd, os.path.basename(p))))
-        return dirs_to_create, file_tasks
+        return collect_upload_tasks(self._cwd, paths)
 
     def _sftp_connection_params(self):
         return {
@@ -743,112 +885,8 @@ class SFTPPanel(QWidget):
             "timeout": int(self.timeout_spin.value()),
         }
 
-    def _upload_bucket(self, params, tasks):
-        transport = None
-        sftp = None
-        try:
-            transport, sftp = self._open_client_from_params(params)
-            results = []
-            for local_path, remote_path in tasks:
-                try:
-                    sftp.put(local_path, remote_path)
-                    results.append((True, local_path, remote_path, ""))
-                except Exception as e:
-                    results.append((False, local_path, remote_path, str(e)))
-            return results
-        finally:
-            try:
-                if sftp:
-                    sftp.close()
-            except Exception:
-                pass
-            try:
-                if transport:
-                    transport.close()
-            except Exception:
-                pass
-
-    def _upload_files_parallel(self, params, file_tasks, workers):
-        total = len(file_tasks)
-        if total == 0:
-            return
-        max_workers = min(max(int(workers), 1), 10, total)
-        self._op_queue.put(("log", f"🚀 Uploading {total} file(s) with {max_workers} worker(s)"))
-        self._op_queue.put(("progress_total", total, "Uploading files..."))
-        if max_workers <= 1:
-            transport = None
-            sftp = None
-            done = 0
-            for local_path, remote_path in file_tasks:
-                try:
-                    if sftp is None:
-                        transport, sftp = self._open_client_from_params(params)
-                    sftp.put(local_path, remote_path)
-                    self._op_queue.put(("log", f"✅ Uploaded: {remote_path}"))
-                except Exception as e:
-                    self._op_queue.put(("log", f"❌ Upload failed: {local_path} ({e})"))
-                done += 1
-                self._op_queue.put(("progress", done))
-            try:
-                if sftp:
-                    sftp.close()
-            except Exception:
-                pass
-            try:
-                if transport:
-                    transport.close()
-            except Exception:
-                pass
-            return
-
-        buckets = [[] for _ in range(max_workers)]
-        for i, task in enumerate(file_tasks):
-            buckets[i % max_workers].append(task)
-        done = 0
-        with ThreadPoolExecutor(max_workers=max_workers) as pool:
-            futures = [pool.submit(self._upload_bucket, params, b) for b in buckets if b]
-            for fut in as_completed(futures):
-                for ok, local_path, remote_path, err in fut.result():
-                    if ok:
-                        self._op_queue.put(("log", f"✅ Uploaded: {remote_path}"))
-                    else:
-                        self._op_queue.put(("log", f"❌ Upload failed: {local_path} ({err})"))
-                    done += 1
-                    self._op_queue.put(("progress", done))
-                    if done % 10 == 0 or done == total:
-                        self._op_queue.put(("log", f"📈 Upload progress: {done}/{total}"))
-
     def _run_upload_job(self, params, paths, workers):
-        try:
-            dirs_to_create, file_tasks = self._collect_upload_tasks(paths)
-            self._op_queue.put(("log", f"📦 Prepared {len(file_tasks)} file task(s)"))
-            transport = None
-            sftp = None
-            try:
-                transport, sftp = self._open_client_from_params(params)
-                for remote_dir in sorted(dirs_to_create, key=lambda p: p.count("/")):
-                    try:
-                        sftp.mkdir(remote_dir)
-                        self._op_queue.put(("log", f"📁 Created remote dir: {remote_dir}"))
-                    except Exception:
-                        pass
-            finally:
-                try:
-                    if sftp:
-                        sftp.close()
-                except Exception:
-                    pass
-                try:
-                    if transport:
-                        transport.close()
-                except Exception:
-                    pass
-            if file_tasks:
-                self._upload_files_parallel(params, file_tasks, workers)
-            self._op_queue.put(("done", True, "✔ Upload finished"))
-        except Exception as e:
-            self._op_queue.put(("error", f"Upload failed: {e}"))
-            self._op_queue.put(("done", False, ""))
+        run_upload_job(params, self._cwd, paths, workers, self._op_queue.put)
 
     def _download_selected(self):
         if not self._ensure_connected():
@@ -913,43 +951,5 @@ class SFTPPanel(QWidget):
         params = self._sftp_connection_params()
         self._start_background_job("delete", self._run_delete_job, params, delete_targets)
 
-    @staticmethod
-    def _remove_remote_dir(sftp, remote_dir: str):
-        for a in sftp.listdir_attr(remote_dir):
-            p = posixpath.join(remote_dir, a.filename)
-            if stat.S_ISDIR(a.st_mode):
-                SFTPPanel._remove_remote_dir(sftp, p)
-            else:
-                sftp.remove(p)
-        sftp.rmdir(remote_dir)
-
     def _run_delete_job(self, params, delete_targets):
-        transport = None
-        sftp = None
-        try:
-            self._op_queue.put(("progress_total", len(delete_targets), "Deleting selected items..."))
-            transport, sftp = self._open_client_from_params(params)
-            done = 0
-            for remote_path, is_dir in delete_targets:
-                if is_dir:
-                    self._remove_remote_dir(sftp, remote_path)
-                else:
-                    sftp.remove(remote_path)
-                done += 1
-                self._op_queue.put(("log", f"🗑 Deleted: {remote_path}"))
-                self._op_queue.put(("progress", done))
-            self._op_queue.put(("done", True, "✔ Delete finished"))
-        except Exception as e:
-            self._op_queue.put(("error", f"Delete failed: {e}"))
-            self._op_queue.put(("done", False, ""))
-        finally:
-            try:
-                if sftp:
-                    sftp.close()
-            except Exception:
-                pass
-            try:
-                if transport:
-                    transport.close()
-            except Exception:
-                pass
+        run_delete_job(params, delete_targets, self._op_queue.put)
