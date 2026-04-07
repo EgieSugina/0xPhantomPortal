@@ -55,9 +55,9 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           ARCH="$(uname -m)"
-          NAME="ssh-tunnel-manager-${VERSION}-linux-${ARCH}"
-          test -f "dist/SSH Tunnel Manager"
-          cp "dist/SSH Tunnel Manager" "$NAME"
+          NAME="0xPhantomPortal-${VERSION}-linux-${ARCH}"
+          test -f "dist/0xPhantomPortal"
+          cp "dist/0xPhantomPortal" "$NAME"
           chmod +x "$NAME"
           echo "path=$NAME" >> "$GITHUB_OUTPUT"
 

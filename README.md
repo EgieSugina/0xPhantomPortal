@@ -46,7 +46,7 @@ chmod +x build.sh
 ./build.sh
 ```
 
-Output: `dist/SSH Tunnel Manager` (single executable, PyInstaller + Qt). The script bundles `icon.svg` and `font/` (if present), uses `--strip` on Linux, and optionally runs UPX if installed.
+Output: `dist/0xPhantomPortal` (single executable, PyInstaller + Qt). The script bundles `icon.svg` and `font/` (if present), uses `--strip` on Linux, and optionally runs UPX if installed.
 
 On Windows, adjust `--add-data` in `build.sh` to use `icon.svg;.` instead of `icon.svg:.` if you build there.
 

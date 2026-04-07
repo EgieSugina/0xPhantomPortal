@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
 #!/usr/bin/env python3
 """
-Entry point for SSH Tunnel Manager.
+Entry point for 0xPhantomPortal.
 
 Refactored into multi-file modules under `stm/` for easier maintenance.
 """

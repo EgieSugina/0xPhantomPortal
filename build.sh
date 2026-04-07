@@ -12,7 +12,7 @@ fi
 python3 -m pip install -q -U pip
 python3 -m pip install -q -r requirements.txt pyinstaller
 
-OUT_NAME="SSH Tunnel Manager"
+OUT_NAME="0xPhantomPortal"
 rm -rf build dist "${OUT_NAME}.spec"
 
 mkdir -p build
