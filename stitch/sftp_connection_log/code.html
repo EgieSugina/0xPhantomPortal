@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TERMINAL_AUTHORITY - SFTP Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #0d0d16;
+            color: #ece9f7;
+        }
+        .font-headline {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .terminal-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: #0d0d16;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #1f1e2b;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#310002",
+                        "inverse-primary": "#5948d3",
+                        "on-secondary": "#005b31",
+                        "on-primary-fixed": "#000000",
+                        "error": "#ff6e84",
+                        "secondary": "#00fd93",
+                        "primary-dim": "#6f5fea",
+                        "on-error": "#490013",
+                        "tertiary": "#ff766d",
+                        "surface-container-lowest": "#000000",
+                        "surface-container-high": "#1f1e2b",
+                        "surface-bright": "#2b2b39",
+                        "on-tertiary-fixed-variant": "#7a000c",
+                        "on-error-container": "#ffb2b9",
+                        "outline-variant": "#484752",
+                        "surface-tint": "#aca3ff",
+                        "primary": "#aca3ff",
+                        "tertiary-fixed-dim": "#ff7b72",
+                        "surface": "#0d0d16",
+                        "on-primary-fixed-variant": "#250094",
+                        "on-tertiary": "#4f0005",
+                        "tertiary-dim": "#ff7168",
+                        "secondary-dim": "#00ed89",
+                        "surface-container": "#191924",
+                        "secondary-fixed": "#00fd93",
+                        "inverse-on-surface": "#55545f",
+                        "inverse-surface": "#fcf8ff",
+                        "tertiary-fixed": "#ff9289",
+                        "surface-container-low": "#12121d",
+                        "on-secondary-fixed": "#004624",
+                        "error-container": "#a70138",
+                        "outline": "#767480",
+                        "error-dim": "#d73357",
+                        "on-background": "#ece9f7",
+                        "on-primary-container": "#1d007a",
+                        "surface-variant": "#252532",
+                        "secondary-fixed-dim": "#00ed89",
+                        "on-secondary-fixed-variant": "#006638",
+                        "on-surface-variant": "#aca9b6",
+                        "tertiary-container": "#fd5c56",
+                        "primary-fixed-dim": "#8f83ff",
+                        "primary-fixed": "#9e93ff",
+                        "on-surface": "#ece9f7",
+                        "on-secondary-container": "#e2ffe6",
+                        "secondary-container": "#006d3c",
+                        "on-tertiary-fixed": "#3a0003",
+                        "on-primary": "#27009a",
+                        "background": "#0d0d16",
+                        "surface-dim": "#0d0d16",
+                        "surface-container-highest": "#252532",
+                        "primary-container": "#9e93ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar (Authority: JSON & Component Mapping) -->
+<aside class="hidden md:flex flex-col h-screen left-0 w-64 bg-[#0d0d16] border-r border-[#1f1e2b]/15 shrink-0 fixed top-0">
+<!-- Header -->
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-sm bg-surface-container-high flex items-center justify-center overflow-hidden border border-primary/20">
+<img alt="System Root" class="w-full h-full object-cover" data-alt="high contrast macro shot of a metallic cpu core with subtle cyan bioluminescent lighting glowing from within" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe_N0P3e7TOBSX6pYhFZwP6OiHXPVgu3coKMhNtI4obS7WYWkW-FEIBr45ZbjE2SgZNDMAPuTeBo1Yliep1sQI3IBTNCZ2q49OKV-ONf_RQbrEdAXFE2yU1LcoCThrWLstNQ4pl3MNQL04PgCSjEsXonUzTk0WhCeaUyEFyS1qoaa8KP857M98pC1ZmKYctXIAWVJyGFmIr4V-Ho2_7IgiOLNysisASoK2FP_zFgSu4o_jgtjEbHLKZ23gRlBvjRpu0h2GeL0kVfY"/>
+</div>
+<div>
+<h2 class="text-lg font-black text-[#00fd93] font-headline tracking-tighter">ROOT_USER</h2>
+<p class="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant opacity-70">LEVEL_01_AUTH</p>
+</div>
+</div>
+<!-- Main Tabs -->
+<nav class="space-y-1">
+<a class="flex items-center gap-3 text-[#00fd93] border-l-4 border-[#00fd93] bg-[#191924] px-4 py-3 group transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="text-xs uppercase tracking-widest font-headline">DASHBOARD</span>
+</a>
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="vpn_key">vpn_key</span>
+<span class="text-xs uppercase tracking-widest font-headline">PROFILES</span>
+</a>
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="folder_shared">folder_shared</span>
+<span class="text-xs uppercase tracking-widest font-headline">EXPLORER</span>
+</a>
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="code">code</span>
+<span class="text-xs uppercase tracking-widest font-headline">TERMINAL</span>
+</a>
+</nav>
+</div>
+<div class="px-6 mb-8">
+<button class="w-full py-3 bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-all duration-300 rounded-sm">
+                NEW_CONNECTION
+            </button>
+</div>
+<!-- Footer -->
+<div class="mt-auto p-6 space-y-1">
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="help">help</span>
+<span class="text-[10px] uppercase tracking-widest font-headline">HELP</span>
+</a>
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="logout">logout</span>
+<span class="text-[10px] uppercase tracking-widest font-headline">LOGOUT</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
+<!-- TopAppBar (Authority: JSON) -->
+<header class="flex justify-between items-center w-full px-6 py-4 bg-[#0d0d16] sticky top-0 z-10 border-b border-[#1f1e2b]/30">
+<div class="flex items-center gap-8">
+<h1 class="text-xl font-bold tracking-tighter text-[#aca3ff] font-headline">TERMINAL_AUTHORITY</h1>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-[#ece9f7] opacity-70 text-[10px] font-bold tracking-widest font-headline hover:text-[#00fd93] transition-colors" href="#">PORT FORWARDING</a>
+<a class="text-[#00fd93] border-b-2 border-[#00fd93] pb-1 text-[10px] font-bold tracking-widest font-headline" href="#">SFTP</a>
+<a class="text-[#ece9f7] opacity-70 text-[10px] font-bold tracking-widest font-headline hover:text-[#00fd93] transition-colors" href="#">LOGS</a>
+<a class="text-[#ece9f7] opacity-70 text-[10px] font-bold tracking-widest font-headline hover:text-[#00fd93] transition-colors" href="#">SETTINGS</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" data-icon="terminal">terminal</span>
+<input class="bg-surface-container-lowest border-none text-[10px] tracking-widest pl-10 pr-4 py-2 w-48 focus:ring-1 focus:ring-secondary/50 rounded-sm" placeholder="EXECUTE COMMAND..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-primary hover:text-secondary transition-colors" data-icon="settings_input_component">settings_input_component</button>
+</div>
+</header>
+<!-- Content Area -->
+<div class="p-6 space-y-6 flex-1 bg-surface-dim">
+<!-- Connection Table Section -->
+<section class="bg-surface-container-low rounded-sm overflow-hidden shadow-2xl">
+<div class="px-6 py-4 flex justify-between items-center border-b border-surface-container-high">
+<h2 class="font-headline font-bold text-primary tracking-tight flex items-center gap-2 uppercase text-sm">
+<span class="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
+                        Active SFTP Streams
+                    </h2>
+<div class="flex gap-4">
+<div class="flex items-center gap-2 bg-surface-container-lowest px-3 py-1 rounded-sm">
+<span class="text-[9px] font-bold tracking-widest opacity-50">ALL_TUNNELS</span>
+<div class="w-8 h-4 bg-secondary/20 rounded-full relative cursor-pointer">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-secondary rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/30">
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">Name</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">Host</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">User</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">SSH</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">SOCKS Port</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">Auth</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-high/20">
+<tr class="hover:bg-surface-container-highest/30 transition-colors">
+<td class="px-6 py-4 font-headline text-sm font-semibold">PRODUCTION_DB_01</td>
+<td class="px-6 py-4 text-xs opacity-80">192.168.1.105</td>
+<td class="px-6 py-4 text-xs opacity-80">sys_admin</td>
+<td class="px-6 py-4 text-xs opacity-80">ED25519</td>
+<td class="px-6 py-4 text-xs font-mono text-primary">8081</td>
+<td class="px-6 py-4 text-xs opacity-80">Keyfile</td>
+<td class="px-6 py-4 text-right">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 bg-secondary/10 text-secondary text-[9px] font-bold rounded-sm border border-secondary/20">
+                                        CONNECTED
+                                    </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/30 transition-colors">
+<td class="px-6 py-4 font-headline text-sm font-semibold text-on-surface-variant">BACKUP_VAULT_WEST</td>
+<td class="px-6 py-4 text-xs opacity-80">10.0.42.12</td>
+<td class="px-6 py-4 text-xs opacity-80">vault_user</td>
+<td class="px-6 py-4 text-xs opacity-80">RSA_4096</td>
+<td class="px-6 py-4 text-xs font-mono text-primary">9002</td>
+<td class="px-6 py-4 text-xs opacity-80">Keyfile</td>
+<td class="px-6 py-4 text-right">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 bg-error/10 text-error text-[9px] font-bold rounded-sm border border-error/20">
+                                        DISCONNECTED
+                                    </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/30 transition-colors">
+<td class="px-6 py-4 font-headline text-sm font-semibold">STAT_SERVER_GLOBAL</td>
+<td class="px-6 py-4 text-xs opacity-80">172.16.0.88</td>
+<td class="px-6 py-4 text-xs opacity-80">analyst_03</td>
+<td class="px-6 py-4 text-xs opacity-80">ED25519</td>
+<td class="px-6 py-4 text-xs font-mono text-primary">7070</td>
+<td class="px-6 py-4 text-xs opacity-80">MFA_Auth</td>
+<td class="px-6 py-4 text-right">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 bg-secondary/10 text-secondary text-[9px] font-bold rounded-sm border border-secondary/20">
+                                        CONNECTED
+                                    </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Terminal Log Section -->
+<section class="flex-1 flex flex-col bg-surface-container-lowest border border-surface-container-high/50 rounded-sm">
+<div class="px-4 py-2 bg-surface-container-high flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-secondary" data-icon="terminal">terminal</span>
+<span class="text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">CONNECTION_LOG_STREAM</span>
+</div>
+<div class="flex gap-2">
+<div class="w-2 h-2 rounded-full bg-error/40"></div>
+<div class="w-2 h-2 rounded-full bg-tertiary/40"></div>
+<div class="w-2 h-2 rounded-full bg-secondary/40"></div>
+</div>
+</div>
+<div class="p-6 font-mono text-[11px] leading-relaxed overflow-y-auto terminal-scroll h-[300px] text-on-surface-variant/80">
+<p class="text-secondary"><span class="opacity-40">[2023-10-24 14:02:11]</span> System: Initializing secure handshake with PRODUCTION_DB_01...</p>
+<p><span class="opacity-40">[2023-10-24 14:02:12]</span> Auth: Key verification successful. Signature valid.</p>
+<p><span class="opacity-40">[2023-10-24 14:02:13]</span> Tunnel: SSH Tunnel established on local port 8081.</p>
+<p class="text-primary"><span class="opacity-40">[2023-10-24 14:02:14]</span> Status: SFTP Channel Open. Ready for I/O operations.</p>
+<p class="text-error"><span class="opacity-40">[2023-10-24 14:05:01]</span> Warn: Connection latency spike detected on node 10.0.42.12.</p>
+<p><span class="opacity-40">[2023-10-24 14:05:22]</span> System: Re-routing traffic through secondary gateway...</p>
+<p><span class="opacity-40">[2023-10-24 14:08:11]</span> Log: 4.2GB transferred via encrypted stream.</p>
+<p class="animate-pulse inline-block w-2 h-4 bg-secondary ml-1 mt-2 align-middle"></p>
+</div>
+</section>
+</div>
+<!-- Footer Actions (Authority: Design System CTAs) -->
+<footer class="p-6 bg-surface-container flex flex-wrap items-center justify-between gap-6 border-t border-surface-container-high">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<span class="text-[10px] font-black tracking-[0.2em] opacity-60 uppercase">Global Switches:</span>
+<button class="flex items-center gap-2 bg-surface-container-high hover:bg-surface-container-highest px-4 py-2 transition-colors rounded-sm border border-outline-variant/20">
+<span class="w-2 h-2 bg-secondary rounded-full shadow-[0_0_8px_#00fd93]"></span>
+<span class="text-[9px] font-bold tracking-widest">ALL ON</span>
+</button>
+<button class="flex items-center gap-2 bg-surface-container-high hover:bg-surface-container-highest px-4 py-2 transition-colors rounded-sm border border-outline-variant/20">
+<span class="w-2 h-2 bg-error rounded-full opacity-50"></span>
+<span class="text-[9px] font-bold tracking-widest">ALL OFF</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-8 py-3 bg-surface-container-highest text-on-surface font-headline font-bold text-xs tracking-widest hover:bg-primary hover:text-on-primary transition-all rounded-sm flex items-center gap-2 group">
+<span class="material-symbols-outlined text-sm group-hover:rotate-12 transition-transform" data-icon="power_settings_new">power_settings_new</span>
+                    DISCONNECT_SELECTED
+                </button>
+<button class="px-8 py-3 bg-gradient-to-br from-primary to-primary-dim text-on-primary font-headline font-bold text-xs tracking-widest hover:brightness-110 shadow-[0_0_15px_rgba(172,163,255,0.3)] transition-all rounded-sm flex items-center gap-2 group">
+<span class="material-symbols-outlined text-sm group-hover:scale-110 transition-transform" data-icon="rocket_launch">rocket_launch</span>
+                    CONNECT_INSTANCES
+                </button>
+</div>
+</footer>
+</main>
+<!-- Visual Polish: Subtle Gradient Overlay -->
+<div class="fixed inset-0 pointer-events-none bg-gradient-to-tr from-primary/5 via-transparent to-secondary/5 mix-blend-overlay"></div>
+</body></html>

@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
     QFormLayout,
+    QFrame,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -78,11 +79,18 @@ class SFTPPanel(QWidget):
         self._op_thread: threading.Thread | None = None
         self._op_name: str | None = None
         self._file_progress_rows: dict[str, tuple[QTreeWidgetItem, QProgressBar]] = {}
+        self._pulse_on = True
+        self._cursor_on = True
         self._build_ui()
         self._load_accounts()
+        self._visual_timer = QTimer(self)
+        self._visual_timer.timeout.connect(self._tick_visuals)
+        self._visual_timer.start(650)
 
     def _build_ui(self):
         root = QVBoxLayout(self)
+        root.setContentsMargins(10, 10, 10, 10)
+        root.setSpacing(10)
         self.pages = QStackedWidget()
         root.addWidget(self.pages, 1)
 
@@ -96,8 +104,8 @@ class SFTPPanel(QWidget):
         self.account_name_edit = QLineEdit()
         self.account_name_edit.setPlaceholderText("my-prod-server")
         self.account_name_edit.setClearButtonEnabled(True)
-        self.save_account_btn = QPushButton("Save Account")
-        self.delete_account_btn = QPushButton("Delete Account")
+        self.save_account_btn = QPushButton("SAVE_PROFILE")
+        self.delete_account_btn = QPushButton("DELETE_PROFILE")
         self.save_account_btn.clicked.connect(self._save_account)
         self.delete_account_btn.clicked.connect(lambda: self._delete_account())
         self.port_spin = QSpinBox()
@@ -113,18 +121,18 @@ class SFTPPanel(QWidget):
         self.worker_spin.setToolTip("Parallel upload connections")
         self.pass_edit = QLineEdit()
         self.pass_edit.setEchoMode(QLineEdit.Password)
-        self.pass_edit.setPlaceholderText("Password (optional if key is used)")
+        self.pass_edit.setPlaceholderText("PASSWORD_OPTIONAL_IF_KEY_IS_USED")
         self.key_edit = QLineEdit()
-        self.key_edit.setPlaceholderText("~/.ssh/id_rsa (optional)")
+        self.key_edit.setPlaceholderText("~/.ssh/id_rsa_OPTIONAL")
         self.key_edit.setClearButtonEnabled(True)
-        self.connect_btn = QPushButton("Connect")
-        self.disconnect_btn = QPushButton("Disconnect")
-        self.test_btn = QPushButton("Test Connection")
-        self.add_profile_btn = QPushButton("Add SFTP")
-        self.back_profiles_btn = QPushButton("Back to Profiles")
-        self.cancel_form_btn = QPushButton("Cancel")
-        self.form_save_btn = QPushButton("Save Profile")
-        self.ws_disconnect_btn = QPushButton("Disconnect")
+        self.connect_btn = QPushButton("CONNECT")
+        self.disconnect_btn = QPushButton("DISCONNECT")
+        self.test_btn = QPushButton("TEST_ENDPOINT")
+        self.add_profile_btn = QPushButton("ADD_SFTP")
+        self.back_profiles_btn = QPushButton("BACK_TO_PROFILES")
+        self.cancel_form_btn = QPushButton("CANCEL")
+        self.form_save_btn = QPushButton("SAVE_PROFILE")
+        self.ws_disconnect_btn = QPushButton("DISCONNECT")
         self.connect_btn.setStyleSheet(f"background-color:{self._COLOR_CONNECT_BTN};color:#ffffff;")
         self.disconnect_btn.setStyleSheet(f"background-color:{self._COLOR_DISCONNECT_BTN};color:#ffffff;")
         self.ws_disconnect_btn.setStyleSheet(f"background-color:{self._COLOR_DISCONNECT_BTN};color:#ffffff;")
@@ -138,15 +146,23 @@ class SFTPPanel(QWidget):
         self.back_profiles_btn.clicked.connect(self._show_profiles_page)
         self.cancel_form_btn.clicked.connect(self._show_profiles_page)
         self.form_save_btn.clicked.connect(self._save_account)
-        self.conn_status = QLabel("● Disconnected")
+        self.conn_status = QLabel("● DISCONNECTED")
         self.conn_status.setStyleSheet(f"color:{self._COLOR_STATUS_OFF};font-weight:700;")
-        self.active_profile_label = QLabel("No active profile")
+        self.active_profile_label = QLabel("CONNECTED TO: NONE")
 
         # Page 1: Profiles grid
         self.page_profiles = QWidget()
         profiles_layout = QVBoxLayout(self.page_profiles)
+        profiles_layout.setContentsMargins(6, 6, 6, 6)
         profiles_top = QHBoxLayout()
-        profiles_top.addWidget(QLabel("SFTP Profiles"))
+        profiles_title = QLabel("SFTP PROFILES")
+        profiles_title.setStyleSheet("font-size:20px;font-weight:800;letter-spacing:1px;color:#ece9f7;")
+        profiles_sub = QLabel("SECURE_FILE_TRANSFER_MANAGEMENT")
+        profiles_sub.setStyleSheet("font-size:11px;color:#aca9b6;")
+        title_col = QVBoxLayout()
+        title_col.addWidget(profiles_title)
+        title_col.addWidget(profiles_sub)
+        profiles_top.addLayout(title_col)
         profiles_top.addStretch()
         profiles_top.addWidget(self.add_profile_btn)
         profiles_layout.addLayout(profiles_top)
@@ -165,32 +181,35 @@ class SFTPPanel(QWidget):
         # Page 2: Add/Edit profile form
         self.page_form = QWidget()
         form_page_layout = QVBoxLayout(self.page_form)
+        form_page_layout.setContentsMargins(6, 6, 6, 6)
         form_header = QHBoxLayout()
-        form_header.addWidget(QLabel("SFTP Profile Form"))
+        form_title = QLabel("SFTP PROFILE CONFIGURATION")
+        form_title.setStyleSheet("font-size:18px;font-weight:800;letter-spacing:1px;color:#ece9f7;")
+        form_header.addWidget(form_title)
         form_header.addStretch()
         form_header.addWidget(self.cancel_form_btn)
         form_header.addWidget(self.form_save_btn)
         form_page_layout.addLayout(form_header)
 
-        profile_box = QGroupBox("Profile")
+        profile_box = QGroupBox("PROFILE")
         profile_form = QFormLayout(profile_box)
         profile_form.setLabelAlignment(Qt.AlignRight)
-        profile_form.addRow("Account name:", self.account_name_edit)
+        profile_form.addRow("PROFILE_NAME:", self.account_name_edit)
 
-        server_box = QGroupBox("Server")
+        server_box = QGroupBox("SERVER")
         server_form = QFormLayout(server_box)
         server_form.setLabelAlignment(Qt.AlignRight)
-        server_form.addRow("Host:", self.host_edit)
-        server_form.addRow("Username:", self.user_edit)
-        server_form.addRow("Port:", self.port_spin)
-        server_form.addRow("Timeout (sec):", self.timeout_spin)
+        server_form.addRow("HOST_IP:", self.host_edit)
+        server_form.addRow("USERNAME:", self.user_edit)
+        server_form.addRow("SSH_PORT:", self.port_spin)
+        server_form.addRow("TIMEOUT_SEC:", self.timeout_spin)
 
-        auth_box = QGroupBox("Authentication")
+        auth_box = QGroupBox("AUTHENTICATION")
         auth_form = QFormLayout(auth_box)
         auth_form.setLabelAlignment(Qt.AlignRight)
-        auth_form.addRow("Password:", self.pass_edit)
-        auth_form.addRow("Identity key:", self.key_edit)
-        auth_form.addRow("Max upload workers:", self.worker_spin)
+        auth_form.addRow("PASSWORD_AUTH:", self.pass_edit)
+        auth_form.addRow("IDENTITY_KEY:", self.key_edit)
+        auth_form.addRow("MAX_UPLOAD_WORKERS:", self.worker_spin)
 
         form_grid = QGridLayout()
         form_grid.setHorizontalSpacing(10)
@@ -213,8 +232,21 @@ class SFTPPanel(QWidget):
         # Page 3: Connected workspace
         self.page_workspace = QWidget()
         ws_layout = QVBoxLayout(self.page_workspace)
+        ws_layout.setContentsMargins(6, 6, 6, 6)
         ws_header = QHBoxLayout()
-        ws_header.addWidget(self.active_profile_label)
+        self.active_profile_label.setStyleSheet("font-size:12px;color:#00fd93;font-weight:700;")
+        ws_title = QLabel("SFTP_EXPLORER")
+        ws_title.setStyleSheet("font-size:20px;font-weight:800;letter-spacing:1px;color:#ece9f7;")
+        ws_title_col = QVBoxLayout()
+        ws_title_col.addWidget(ws_title)
+        ws_status_row = QHBoxLayout()
+        self.ws_status_dot = QLabel("●")
+        self.ws_status_dot.setStyleSheet("color:#00fd93;font-size:11px;")
+        ws_status_row.addWidget(self.ws_status_dot)
+        ws_status_row.addWidget(self.active_profile_label)
+        ws_status_row.addStretch()
+        ws_title_col.addLayout(ws_status_row)
+        ws_header.addLayout(ws_title_col)
         ws_header.addStretch()
         ws_header.addWidget(self.back_profiles_btn)
         ws_header.addWidget(self.ws_disconnect_btn)
@@ -222,13 +254,13 @@ class SFTPPanel(QWidget):
         nav = QHBoxLayout()
         self.path_edit = QLineEdit(".")
         self.path_edit.returnPressed.connect(self._goto_path)
-        self.refresh_btn = QPushButton("Refresh")
-        self.up_btn = QPushButton("Up")
-        self.mkdir_btn = QPushButton("New Folder")
+        self.refresh_btn = QPushButton("REFRESH")
+        self.up_btn = QPushButton("UP")
+        self.mkdir_btn = QPushButton("NEW_FOLDER")
         self.refresh_btn.clicked.connect(self._refresh)
         self.up_btn.clicked.connect(self._up_dir)
         self.mkdir_btn.clicked.connect(self._mkdir)
-        nav.addWidget(QLabel("Remote path:"))
+        nav.addWidget(QLabel("REMOTE_PATH:"))
         nav.addWidget(self.path_edit)
         nav.addWidget(self.up_btn)
         nav.addWidget(self.refresh_btn)
@@ -249,25 +281,10 @@ class SFTPPanel(QWidget):
         )
         self.tree.itemDoubleClicked.connect(self._open_item)
         self.tree.paths_dropped.connect(self._upload_local_paths)
+        self.tree.itemSelectionChanged.connect(self._update_selected_count)
         ws_layout.addWidget(self.tree, 1)
 
-        actions = QHBoxLayout()
-        self.upload_btn = QPushButton("Upload Files/Folder")
-        self.download_btn = QPushButton("Download Selected")
-        self.delete_btn = QPushButton("Delete Selected")
-        self.upload_btn.setStyleSheet(f"background-color:{self._COLOR_UPLOAD_BTN};color:#ffffff;")
-        self.download_btn.setStyleSheet(f"background-color:{self._COLOR_DOWNLOAD_BTN};color:#ffffff;")
-        self.delete_btn.setStyleSheet(f"background-color:{self._COLOR_DELETE_BTN};color:#ffffff;")
-        self.upload_btn.clicked.connect(self._upload_pick)
-        self.download_btn.clicked.connect(self._download_selected)
-        self.delete_btn.clicked.connect(self._delete_selected)
-        actions.addWidget(self.upload_btn)
-        actions.addWidget(self.download_btn)
-        actions.addWidget(self.delete_btn)
-        actions.addStretch()
-        ws_layout.addLayout(actions)
-
-        self.drop_hint = QLabel("Tip: You can drag and drop file/folder here to upload.")
+        self.drop_hint = QLabel("TIP: DRAG_AND_DROP_FILE_OR_FOLDER_TO_UPLOAD")
         self.drop_hint.setStyleSheet("color:#9fc3ff;font-style:italic;")
         ws_layout.addWidget(self.drop_hint)
 
@@ -292,6 +309,64 @@ class SFTPPanel(QWidget):
         bottom_split.addWidget(self.log, 1)
         bottom_split.addWidget(self.file_progress_tree, 1)
         ws_layout.addLayout(bottom_split)
+        self.log_cursor = QLabel("█")
+        self.log_cursor.setStyleSheet("color:#00fd93;font-size:12px;")
+        ws_layout.addWidget(self.log_cursor)
+
+        self.transfers_overlay = QFrame(self.page_workspace)
+        self.transfers_overlay.setObjectName("TransfersOverlay")
+        self.transfers_overlay.setStyleSheet(
+            "#TransfersOverlay {"
+            "background: rgba(43,43,57,0.60);"
+            "border: 1px solid rgba(72,71,82,0.35);"
+            "border-radius: 3px;"
+            "}"
+        )
+        self.transfers_overlay.setMinimumWidth(260)
+        self.transfers_overlay.setMaximumWidth(320)
+        overlay_layout = QVBoxLayout(self.transfers_overlay)
+        overlay_title_row = QHBoxLayout()
+        overlay_title = QLabel("ACTIVE_TRANSFERS")
+        overlay_title.setStyleSheet("font-size:10px;font-weight:800;letter-spacing:1px;color:#00fd93;")
+        self.overlay_live_chip = QLabel("LIVE")
+        self.overlay_live_chip.setStyleSheet(
+            "background:rgba(0,253,147,0.12);color:#00fd93;padding:2px 6px;font-size:9px;font-weight:700;"
+        )
+        overlay_title_row.addWidget(overlay_title)
+        overlay_title_row.addStretch()
+        overlay_title_row.addWidget(self.overlay_live_chip)
+        overlay_layout.addLayout(overlay_title_row)
+        self.overlay_status_label = QLabel("NO_ACTIVE_TRANSFER")
+        self.overlay_status_label.setStyleSheet("font-size:10px;color:#aca9b6;")
+        overlay_layout.addWidget(self.overlay_status_label)
+        self.overlay_bar = QProgressBar()
+        self.overlay_bar.setRange(0, 100)
+        self.overlay_bar.setValue(0)
+        self.overlay_bar.setFormat("%p%")
+        overlay_layout.addWidget(self.overlay_bar)
+        self.transfers_overlay.hide()
+
+        ws_footer = QHBoxLayout()
+        ws_footer.addWidget(QLabel("SELECTED:"))
+        self.selected_count_label = QLabel("0 ITEM")
+        self.selected_count_label.setStyleSheet(
+            "background:rgba(172,163,255,0.2);color:#aca3ff;padding:2px 8px;font-size:10px;font-weight:700;"
+        )
+        ws_footer.addWidget(self.selected_count_label)
+        ws_footer.addStretch()
+        self.upload_btn = QPushButton("UPLOAD_FILES_FOLDER")
+        self.download_btn = QPushButton("DOWNLOAD_SELECTED")
+        self.delete_btn = QPushButton("DELETE_SELECTED")
+        self.upload_btn.setStyleSheet(f"background-color:{self._COLOR_UPLOAD_BTN};color:#ffffff;")
+        self.download_btn.setStyleSheet(f"background-color:{self._COLOR_DOWNLOAD_BTN};color:#ffffff;")
+        self.delete_btn.setStyleSheet(f"background-color:{self._COLOR_DELETE_BTN};color:#ffffff;")
+        self.upload_btn.clicked.connect(self._upload_pick)
+        self.download_btn.clicked.connect(self._download_selected)
+        self.delete_btn.clicked.connect(self._delete_selected)
+        ws_footer.addWidget(self.upload_btn)
+        ws_footer.addWidget(self.download_btn)
+        ws_footer.addWidget(self.delete_btn)
+        ws_layout.addLayout(ws_footer)
         self.pages.addWidget(self.page_workspace)
         self.pages.setCurrentWidget(self.page_profiles)
         style = QApplication.style()
@@ -300,6 +375,80 @@ class SFTPPanel(QWidget):
         self._apply_button_icons()
         if not PARAMIKO_OK:
             self._append("❌ paramiko not installed. Run: pip install paramiko")
+        self._apply_design_style()
+
+    def _apply_design_style(self):
+        self.setStyleSheet(
+            """
+            QWidget { background:#0d0d16; color:#ece9f7; }
+            QStackedWidget, QScrollArea, QScrollArea > QWidget > QWidget { background:#0d0d16; }
+            QGroupBox {
+                border:1px solid #252532;
+                background:#12121d;
+                margin-top:8px;
+                padding-top:8px;
+                border-radius:4px;
+                color:#aca3ff;
+                font-weight:700;
+            }
+            QLineEdit, QSpinBox, QTextEdit {
+                background:#000000;
+                border:1px solid #252532;
+                border-radius:3px;
+                padding:6px 8px;
+                color:#ece9f7;
+            }
+            QTreeWidget {
+                background:#12121d;
+                border:1px solid #252532;
+                color:#ece9f7;
+            }
+            QTreeWidget::item:hover {
+                background:#252532;
+            }
+            QHeaderView::section {
+                background:#1f1e2b;
+                color:#00fd93;
+                border:none;
+                padding:6px;
+                font-weight:700;
+                letter-spacing:1px;
+            }
+            QPushButton {
+                border:none;
+                border-radius:3px;
+                padding:6px 10px;
+                font-weight:700;
+            }
+            QPushButton:hover {
+                background-color: #252532;
+            }
+            QPushButton:disabled {
+                background:#252532;
+                color:#767480;
+            }
+            QProgressBar {
+                background:#12121d;
+                border:1px solid #252532;
+                border-radius:2px;
+                color:#ece9f7;
+                text-align:center;
+                min-height:16px;
+            }
+            QProgressBar::chunk {
+                background:#00fd93;
+            }
+            """
+        )
+        self.connect_btn.setStyleSheet(
+            "background:#00fd93;color:#004624;"
+            "font-weight:800;"
+            "box-shadow:0 0 12px rgba(0,253,147,0.18);"
+        )
+        self.upload_btn.setStyleSheet(
+            "background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #aca3ff,stop:1 #6f5fea);"
+            "color:#1d007a;font-weight:800;"
+        )
 
     def _apply_button_icons(self):
         def set_theme_icon(button: QPushButton, icon_name: str):
@@ -324,6 +473,12 @@ class SFTPPanel(QWidget):
         set_theme_icon(self.download_btn, "go-down")
         set_theme_icon(self.delete_btn, "edit-delete")
 
+    def _update_selected_count(self):
+        if not hasattr(self, "selected_count_label"):
+            return
+        n = len(self.tree.selectedItems()) if hasattr(self, "tree") else 0
+        self.selected_count_label.setText(f"{n} ITEM" if n == 1 else f"{n} ITEMS")
+
     def _append(self, msg: str):
         self.log.append(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
         self._yield_ui()
@@ -340,6 +495,8 @@ class SFTPPanel(QWidget):
         if not self.progress.isVisible():
             return
         self.progress.setValue(max(0, min(value, self.progress.maximum())))
+        if hasattr(self, "overlay_bar"):
+            self.overlay_bar.setValue(self.progress.value())
         self._yield_ui()
 
     def _reset_file_progress_view(self):
@@ -378,19 +535,36 @@ class SFTPPanel(QWidget):
             item.setText(2, "Failed")
         if status_text and not ok:
             item.setToolTip(2, status_text)
+        if hasattr(self, "overlay_status_label"):
+            self.overlay_status_label.setText(f"{'Completed' if ok else 'Failed'}: {item.text(0)}")
 
     def _set_progress_total(self, total: int, label: str | None = None):
         total = max(total, 1)
         if label:
             self.progress_label.setText(label)
+            if hasattr(self, "overlay_status_label"):
+                self.overlay_status_label.setText(label)
         self.progress.setRange(0, total)
         self.progress.setValue(0)
         self.progress.setVisible(True)
+        if hasattr(self, "overlay_bar"):
+            self.overlay_bar.setRange(0, total)
+            self.overlay_bar.setValue(0)
+        if hasattr(self, "transfers_overlay"):
+            self.transfers_overlay.show()
+            self._position_transfers_overlay()
         self._yield_ui()
 
     def _end_progress(self):
         self.progress.setVisible(False)
         self.progress_label.setText("")
+        if hasattr(self, "overlay_status_label"):
+            self.overlay_status_label.setText("NO_ACTIVE_TRANSFER")
+        if hasattr(self, "overlay_bar"):
+            self.overlay_bar.setRange(0, 100)
+            self.overlay_bar.setValue(0)
+        if hasattr(self, "transfers_overlay"):
+            self.transfers_overlay.hide()
         self._yield_ui()
 
     def _start_background_job(self, op_name: str, target, *args):
@@ -467,10 +641,10 @@ class SFTPPanel(QWidget):
             self.conn_status.setText("● Busy")
             self.conn_status.setStyleSheet(f"color:{self._COLOR_STATUS_BUSY};font-weight:700;")
         elif self._sftp is not None:
-            self.conn_status.setText("● Connected")
+            self.conn_status.setText("● CONNECTED")
             self.conn_status.setStyleSheet(f"color:{self._COLOR_STATUS_OK};font-weight:700;")
         else:
-            self.conn_status.setText("● Disconnected")
+            self.conn_status.setText("● DISCONNECTED")
             self.conn_status.setStyleSheet(f"color:{self._COLOR_STATUS_OFF};font-weight:700;")
         self.connect_btn.setEnabled(not busy and PARAMIKO_OK and self._sftp is None)
         self.disconnect_btn.setEnabled(not busy and self._sftp is not None)
@@ -490,6 +664,28 @@ class SFTPPanel(QWidget):
         self.refresh_btn.setEnabled(not busy)
         self.up_btn.setEnabled(not busy)
         self.mkdir_btn.setEnabled(not busy)
+
+    def _tick_visuals(self):
+        self._pulse_on = not self._pulse_on
+        if hasattr(self, "ws_status_dot"):
+            if self._sftp is not None:
+                color = "#00fd93" if self._pulse_on else "#00ed89"
+                self.ws_status_dot.setStyleSheet(f"color:{color};font-size:11px;")
+            else:
+                self.ws_status_dot.setStyleSheet("color:#ff6e84;font-size:11px;")
+        if hasattr(self, "log_cursor"):
+            self._cursor_on = not self._cursor_on
+            self.log_cursor.setVisible(self._cursor_on)
+
+    def _position_transfers_overlay(self):
+        if not hasattr(self, "transfers_overlay"):
+            return
+        m = 12
+        w = self.transfers_overlay.width()
+        h = self.transfers_overlay.sizeHint().height()
+        x = max(m, self.page_workspace.width() - w - m)
+        y = max(m, self.page_workspace.height() - h - m)
+        self.transfers_overlay.move(x, y)
 
     def _load_accounts(self):
         self._accounts = load_sftp_accounts()
@@ -533,7 +729,7 @@ class SFTPPanel(QWidget):
         self.key_edit.setText(acc.get("key_file", ""))
         self.pass_edit.setText(load_password(sftp_password_id(acc["name"])))
         if self._connect():
-            self.active_profile_label.setText(f"Connected profile: {name}")
+            self.active_profile_label.setText(f"CONNECTED TO: {name}")
             self.pages.setCurrentWidget(self.page_workspace)
 
     def _rebuild_profile_grid(self):
@@ -551,7 +747,13 @@ class SFTPPanel(QWidget):
             card = QGroupBox(name)
             card.setMinimumWidth(self._PROFILE_CARD_MIN_WIDTH)
             card.setToolTip(f"{user}@{host}:{port}")
+            card.setStyleSheet(
+                "QGroupBox {background:#191924;border:1px solid #252532;color:#aca3ff;font-weight:800;}"
+            )
             card_layout = QVBoxLayout(card)
+            meta = QLabel(f"{user}@{host}:{port}")
+            meta.setStyleSheet("color:#aca9b6;font-size:11px;")
+            card_layout.addWidget(meta)
             row = QHBoxLayout()
             connect_btn = self._make_icon_button(
                 "network-connect",
@@ -599,6 +801,7 @@ class SFTPPanel(QWidget):
         super().resizeEvent(event)
         if hasattr(self, "pages") and self.pages.currentWidget() is self.page_profiles:
             self._rebuild_profile_grid()
+        self._position_transfers_overlay()
 
     def _save_account(self):
         name = self.account_name_edit.text().strip()
@@ -781,7 +984,7 @@ class SFTPPanel(QWidget):
             pass
         self._sftp = None
         self._transport = None
-        self.active_profile_label.setText("No active profile")
+        self.active_profile_label.setText("CONNECTED TO: NONE")
         self._set_busy(False)
         if show_profiles:
             self.pages.setCurrentWidget(self.page_profiles)
@@ -836,7 +1039,7 @@ class SFTPPanel(QWidget):
     def _mkdir(self):
         if not self._ensure_connected():
             return
-        name, ok = QInputDialog.getText(self, "New Folder", "Folder name:")
+        name, ok = QInputDialog.getText(self, "NEW_FOLDER", "FOLDER_NAME:")
         if ok and name.strip():
             try:
                 self._sftp.mkdir(posixpath.join(self._cwd, name.strip()))

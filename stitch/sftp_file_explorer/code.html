@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-tertiary-container": "#310002",
+                "inverse-primary": "#5948d3",
+                "on-secondary": "#005b31",
+                "on-primary-fixed": "#000000",
+                "error": "#ff6e84",
+                "secondary": "#00fd93",
+                "primary-dim": "#6f5fea",
+                "on-error": "#490013",
+                "tertiary": "#ff766d",
+                "surface-container-lowest": "#000000",
+                "surface-container-high": "#1f1e2b",
+                "surface-bright": "#2b2b39",
+                "on-tertiary-fixed-variant": "#7a000c",
+                "on-error-container": "#ffb2b9",
+                "outline-variant": "#484752",
+                "surface-tint": "#aca3ff",
+                "primary": "#aca3ff",
+                "tertiary-fixed-dim": "#ff7b72",
+                "surface": "#0d0d16",
+                "on-primary-fixed-variant": "#250094",
+                "on-tertiary": "#4f0005",
+                "tertiary-dim": "#ff7168",
+                "secondary-dim": "#00ed89",
+                "surface-container": "#191924",
+                "secondary-fixed": "#00fd93",
+                "inverse-on-surface": "#55545f",
+                "inverse-surface": "#fcf8ff",
+                "tertiary-fixed": "#ff9289",
+                "surface-container-low": "#12121d",
+                "on-secondary-fixed": "#004624",
+                "error-container": "#a70138",
+                "outline": "#767480",
+                "error-dim": "#d73357",
+                "on-background": "#ece9f7",
+                "on-primary-container": "#1d007a",
+                "surface-variant": "#252532",
+                "secondary-fixed-dim": "#00ed89",
+                "on-secondary-fixed-variant": "#006638",
+                "on-surface-variant": "#aca9b6",
+                "tertiary-container": "#fd5c56",
+                "primary-fixed-dim": "#8f83ff",
+                "primary-fixed": "#9e93ff",
+                "on-surface": "#ece9f7",
+                "on-secondary-container": "#e2ffe6",
+                "secondary-container": "#006d3c",
+                "on-tertiary-fixed": "#3a0003",
+                "on-primary": "#27009a",
+                "background": "#0d0d16",
+                "surface-dim": "#0d0d16",
+                "surface-container-highest": "#252532",
+                "primary-container": "#9e93ff"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "fontFamily": {
+                "headline": ["Space Grotesk"],
+                "body": ["Manrope"],
+                "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #0d0d16;
+            color: #ece9f7;
+        }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .glass-panel {
+            background: rgba(43, 43, 57, 0.6);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar (Shared Component) -->
+<aside class="bg-[#0d0d16] flex flex-col h-screen left-0 w-64 border-r border-[#1f1e2b]/15 fixed z-50">
+<div class="p-6">
+<div class="text-lg font-black text-[#00fd93] font-headline">TERMINAL_AUTHORITY</div>
+<div class="mt-8 flex items-center gap-3">
+<div class="w-10 h-10 bg-surface-container-high rounded-sm flex items-center justify-center overflow-hidden">
+<img alt="System Root" data-alt="Cyberpunk style minimalist avatar of a system administrator with neon accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhLOgs4KWws1YU2tzu2QpnM4NzOynkQQYROT_z2U5qwj5bBg4oqhE4tF75AQFrlWmYfI7B0Btxdhb1Y66gPq34Z9k8g7znRCQeyYkJdEGZLqMIcg-__TZzcqLJyxuvDS01rzzt03-cP8WS4p-SUgMILEEm7wqqSgFokss8JhrW-lxL4uoC-PZTYlQl9l2du5yb7RzHADqI5wcp6Rl_EJYSStKMLWyM6nNCYY4KuAEs2aYVtl4BDaAEnqyDoba8pJ50_NXswOL6Oy0"/>
+</div>
+<div>
+<div class="text-xs uppercase tracking-widest font-headline text-[#00fd93]">ROOT_USER</div>
+<div class="text-[10px] opacity-50">LEVEL_01_AUTH</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 mt-4">
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-xs uppercase tracking-widest font-headline">DASHBOARD</span>
+</div>
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined">vpn_key</span>
+<span class="text-xs uppercase tracking-widest font-headline">PROFILES</span>
+</div>
+<div class="text-[#00fd93] border-l-4 border-[#00fd93] bg-[#191924] px-4 py-3 flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined">folder_shared</span>
+<span class="text-xs uppercase tracking-widest font-headline">EXPLORER</span>
+</div>
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined">code</span>
+<span class="text-xs uppercase tracking-widest font-headline">TERMINAL</span>
+</div>
+</nav>
+<div class="p-4 mt-auto border-t border-[#1f1e2b]/15">
+<button class="w-full bg-[#00fd93] text-[#004624] py-3 rounded-sm font-headline font-bold text-xs tracking-widest hover:brightness-110 transition-all">
+                NEW_CONNECTION
+            </button>
+<div class="mt-4">
+<div class="text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined text-sm">help</span>
+<span class="text-[10px] uppercase tracking-widest font-headline">HELP</span>
+</div>
+<div class="text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined text-sm">logout</span>
+<span class="text-[10px] uppercase tracking-widest font-headline">LOGOUT</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 flex flex-col bg-surface min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-[#0d0d16] flex justify-between items-center w-full px-6 py-4 fixed top-0 left-64 right-0 z-40 bg-[#191924]">
+<div class="flex items-center gap-8">
+<div class="flex gap-6">
+<a class="text-[#ece9f7] opacity-70 hover:bg-[#1f1e2b] hover:text-[#00fd93] transition-colors font-label text-xs tracking-wider" href="#">PORT FORWARDING</a>
+<a class="text-[#00fd93] border-b-2 border-[#00fd93] pb-1 font-label text-xs tracking-wider" href="#">SFTP</a>
+<a class="text-[#ece9f7] opacity-70 hover:bg-[#1f1e2b] hover:text-[#00fd93] transition-colors font-label text-xs tracking-wider" href="#">LOGS</a>
+<a class="text-[#ece9f7] opacity-70 hover:bg-[#1f1e2b] hover:text-[#00fd93] transition-colors font-label text-xs tracking-wider" href="#">SETTINGS</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center bg-surface-container-lowest px-3 py-1.5 rounded-sm">
+<span class="material-symbols-outlined text-primary text-sm mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-[10px] text-on-surface font-label w-48 uppercase tracking-tighter" placeholder="SEARCH_FILES..." type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-[#aca3ff] hover:bg-[#1f1e2b] rounded-sm transition-colors">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="p-2 text-[#aca3ff] hover:bg-[#1f1e2b] rounded-sm transition-colors">
+<span class="material-symbols-outlined">settings_input_component</span>
+</button>
+</div>
+</div>
+</header>
+<!-- SFTP Content -->
+<div class="mt-20 px-8 py-6 flex-1 flex flex-col gap-6">
+<!-- Connection Header -->
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-4">
+<div class="bg-surface-container-high p-3 rounded-sm">
+<span class="material-symbols-outlined text-secondary">storage</span>
+</div>
+<div>
+<h1 class="font-headline text-2xl font-bold tracking-tight text-on-surface">SFTP_EXPLORER</h1>
+<div class="flex items-center gap-2 mt-1">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(0,253,147,0.6)]"></span>
+<p class="text-xs font-label text-on-surface-variant tracking-wide">CONNECTED TO: <span class="text-secondary font-bold">appnaru</span></p>
+</div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-high text-primary px-4 py-2 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-surface-bright transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                        BACK TO PROFILES
+                    </button>
+<button class="bg-error-container text-on-surface px-4 py-2 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-error transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">link_off</span>
+                        DISCONNECT
+                    </button>
+</div>
+</div>
+<!-- Path Bar -->
+<div class="bg-surface-container-low p-4 rounded-sm flex items-center gap-4">
+<span class="text-xs font-headline text-secondary tracking-widest">REMOTE_PATH:</span>
+<div class="flex-1 bg-surface-container-lowest px-4 py-2 rounded-sm border border-outline-variant/20 flex items-center">
+<span class="text-primary text-xs opacity-50 mr-2">/</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs text-on-surface font-label w-full p-0" type="text" value="home/appnaru/deployments/v2.1.0-alpha/assets/scripts/"/>
+</div>
+<button class="p-2 bg-surface-container-high hover:bg-surface-bright text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+</div>
+<!-- File List Container -->
+<div class="flex-1 bg-surface-container-low rounded-sm overflow-hidden flex flex-col">
+<div class="grid grid-cols-12 bg-surface-container-high px-6 py-3 border-b border-outline-variant/10">
+<div class="col-span-6 text-[10px] font-headline font-bold tracking-widest text-secondary opacity-80 uppercase">Name</div>
+<div class="col-span-2 text-[10px] font-headline font-bold tracking-widest text-secondary opacity-80 uppercase">Type</div>
+<div class="col-span-2 text-[10px] font-headline font-bold tracking-widest text-secondary opacity-80 uppercase">Size</div>
+<div class="col-span-2 text-[10px] font-headline font-bold tracking-widest text-secondary opacity-80 uppercase">Modified</div>
+</div>
+<div class="flex-1 overflow-y-auto font-label">
+<!-- Row: Folder -->
+<div class="grid grid-cols-12 px-6 py-3 hover:bg-surface-container-highest transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-dim group-hover:text-primary" style="font-variation-settings: 'FILL' 1;">folder</span>
+<span class="text-sm font-medium">config</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant uppercase tracking-tighter">Directory</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">--</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">2023-10-24 14:22</div>
+</div>
+<!-- Row: Folder -->
+<div class="grid grid-cols-12 px-6 py-3 hover:bg-surface-container-highest transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-dim group-hover:text-primary" style="font-variation-settings: 'FILL' 1;">folder</span>
+<span class="text-sm font-medium">logs</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant uppercase tracking-tighter">Directory</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">--</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">2023-10-25 09:10</div>
+</div>
+<!-- Row: File (Selected) -->
+<div class="grid grid-cols-12 px-6 py-3 bg-primary/10 border-l-2 border-primary transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">description</span>
+<span class="text-sm font-medium text-primary">main.py</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface uppercase tracking-tighter">Python File</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface">14.2 KB</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface">2023-10-27 18:45</div>
+</div>
+<!-- Row: File -->
+<div class="grid grid-cols-12 px-6 py-3 hover:bg-surface-container-highest transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface">javascript</span>
+<span class="text-sm font-medium">app.bundle.js</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant uppercase tracking-tighter">JavaScript</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">1.2 MB</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">2023-10-27 16:30</div>
+</div>
+<!-- Row: File -->
+<div class="grid grid-cols-12 px-6 py-3 hover:bg-surface-container-highest transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface">settings</span>
+<span class="text-sm font-medium">.env.production</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant uppercase tracking-tighter">Config</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">420 B</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">2023-10-26 21:05</div>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<footer class="bg-surface-container p-6 rounded-sm flex items-center justify-between border-t border-outline-variant/10 shadow-2xl">
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-headline tracking-widest text-on-surface-variant uppercase">Selected:</span>
+<span class="bg-primary/20 text-primary px-2 py-0.5 text-[10px] rounded-sm font-bold">1 ITEM</span>
+</div>
+<div class="flex gap-4">
+<button class="bg-[#aca3ff] text-[#1d007a] px-6 py-2.5 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-[#6f5fea] hover:text-on-surface transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(172,163,255,0.2)]">
+<span class="material-symbols-outlined text-sm">upload</span>
+                        UPLOAD FILES/FOLDER
+                    </button>
+<button class="bg-[#aca3ff] text-[#1d007a] px-6 py-2.5 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-[#6f5fea] hover:text-on-surface transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">download</span>
+                        DOWNLOAD SELECTED
+                    </button>
+<button class="bg-error-container text-on-surface px-6 py-2.5 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-error transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">delete_forever</span>
+                        DELETE SELECTED
+                    </button>
+</div>
+</footer>
+</div>
+</main>
+<!-- Transfer Status Overlay (Tactical Noir Pattern) -->
+<div class="fixed bottom-8 right-8 w-80 glass-panel border border-outline-variant/20 p-4 rounded-sm shadow-2xl z-50">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-[10px] font-headline font-bold tracking-[0.2em] text-secondary">ACTIVE_TRANSFERS</h3>
+<span class="bg-secondary/10 text-secondary text-[8px] px-1.5 py-0.5 rounded-full border border-secondary/20">LIVE</span>
+</div>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-[10px] mb-1.5">
+<span class="text-on-surface truncate w-32">assets.zip</span>
+<span class="text-secondary">78%</span>
+</div>
+<div class="h-1 bg-surface-container-lowest w-full rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[78%] shadow-[0_0_10px_#00fd93]"></div>
+</div>
+</div>
+<div class="flex items-center gap-2 text-[9px] text-on-surface-variant italic">
+<span class="material-symbols-outlined text-[12px] animate-pulse">sync</span>
+                Stabilizing protocol handshake...
+            </div>
+</div>
+</div>
+</body></html>

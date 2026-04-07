@@ -111,8 +111,8 @@ class MainWindow(QMainWindow):
         title_font.setBold(True)
         title.setFont(title_font)
         title.setStyleSheet(f"letter-spacing:1px;color:{THEME_TITLE};")
-        cfg_btn_global = self._btn("⭳⭱ Config", THEME_BTN_SECONDARY, self._config_io)
-        cfg_btn_global.setToolTip("Backup/Restore full configuration")
+        cfg_btn_global = self._btn("⭳⭱ CONFIG_IO", THEME_BTN_SECONDARY, self._config_io)
+        cfg_btn_global.setToolTip("BACKUP_RESTORE_FULL_CONFIGURATION")
         header.addWidget(logo)
         header.addWidget(title)
         header.addStretch()
@@ -134,9 +134,9 @@ class MainWindow(QMainWindow):
         tunnels_layout.setSpacing(8)
         tunnels_toolbar = QHBoxLayout()
         tunnels_toolbar.setSpacing(8)
-        add_btn = self._btn("＋ Add", THEME_PRIMARY, self._add_tunnel)
-        edit_btn = self._btn("✏ Edit", THEME_BTN_SECONDARY, self._edit_tunnel)
-        del_btn = self._btn("✕ Delete", "#9b1c3a", self._delete_tunnel)
+        add_btn = self._btn("＋ NEW_CONNECTION", THEME_PRIMARY, self._add_tunnel)
+        edit_btn = self._btn("✏ EDIT_PROFILE", THEME_BTN_SECONDARY, self._edit_tunnel)
+        del_btn = self._btn("✕ DELETE_PROFILE", "#9b1c3a", self._delete_tunnel)
         tunnels_toolbar.addWidget(add_btn)
         tunnels_toolbar.addWidget(edit_btn)
         tunnels_toolbar.addWidget(del_btn)
@@ -182,7 +182,7 @@ class MainWindow(QMainWindow):
             self.tabs.addTab(wrap, ttitle)
         splitter.addWidget(self.tabs)
 
-        log_group = QGroupBox("Connection Log")
+        log_group = QGroupBox("CONNECTION_LOG_STREAM")
         log_layout = QVBoxLayout(log_group)
         self.log_view = QTextEdit()
         self.log_view.setReadOnly(True)
@@ -194,10 +194,10 @@ class MainWindow(QMainWindow):
         tunnels_layout.addWidget(splitter, 1)
 
         ab = QHBoxLayout()
-        self.connect_btn = self._btn("▶ Connect", "#2ecc71", self._connect_selected)
-        self.disconnect_btn = self._btn("■ Disconnect", STATUS_DISCONNECTED, self._disconnect_selected)
-        self.connect_all_btn = self._btn("▶▶ All On", "#27ae60", self._connect_all)
-        self.disconnect_all_btn = self._btn("■■ All Off", "#9b1c3a", self._disconnect_all)
+        self.connect_btn = self._btn("▶ CONNECT_SELECTED", "#2ecc71", self._connect_selected)
+        self.disconnect_btn = self._btn("■ DISCONNECT_SELECTED", STATUS_DISCONNECTED, self._disconnect_selected)
+        self.connect_all_btn = self._btn("▶▶ CONNECT_INSTANCES", "#27ae60", self._connect_all)
+        self.disconnect_all_btn = self._btn("■■ DISCONNECT_INSTANCES", "#9b1c3a", self._disconnect_all)
         ab.addWidget(self.connect_btn)
         ab.addWidget(self.disconnect_btn)
         ab.addStretch()
@@ -205,12 +205,12 @@ class MainWindow(QMainWindow):
         ab.addWidget(self.disconnect_all_btn)
         tunnels_layout.addLayout(ab)
 
-        self.main_tabs.addTab(tunnels_page, "Port Forward")
+        self.main_tabs.addTab(tunnels_page, "PORT FORWARDING")
         self.sftp_panel = SFTPPanel(self)
         self.main_tabs.addTab(self.sftp_panel, "SFTP")
         self._apply_tab_icons()
 
-        self.status_label = QLabel("Ready")
+        self.status_label = QLabel("READY")
         self.statusBar().addWidget(self.status_label)
         self._blink = False
         self._timer = QTimer(self)
@@ -218,38 +218,97 @@ class MainWindow(QMainWindow):
         self._timer.start(1000)
 
     def _apply_style(self):
-        # bg_img = resource_dir() / "img" / "bg.jpg"
         bg_img = None
         bg_css = ""
-        # if bg_img and bg_img.exists():
-        #     bg_css = (
-        #         "QWidget#AppCentral {"
-        #         f"background-image: url('{bg_img.as_posix()}');"
-        #         "background-position: center;"
-        #         "background-repeat: no-repeat;"
-        #         "}"
-        #     )
         self.setStyleSheet(
             f"""
             QMainWindow, QWidget {{
                 background-color: {THEME_BG_WIDGET};
-                color: #e8e0f2;
+                color: #ece9f7;
                 font-family: 'Noto Sans', 'DejaVu Sans', sans-serif;
                 font-size: 13px;
             }}
-            QTableWidget {{ background-color: {THEME_BG_TABLE}; alternate-background-color: {THEME_BG_TABLE_ALT}; gridline-color: {THEME_BORDER}; border: 1px solid {THEME_BORDER}; border-radius: 4px; }}
-            QTableWidget::item:selected {{ background-color: {THEME_PRIMARY}; color: #fff; }}
-            QHeaderView::section {{ background-color: {THEME_HEADER_BG}; color: {THEME_HEADER_FG}; padding: 6px; border: none; font-weight: 600; }}
-            QPushButton {{ border-radius: 4px; padding: 6px 14px; font-weight: 600; border: none; color: #fff; }}
-            QPushButton:disabled {{ background-color: {THEME_BTN_DISABLED} !important; color: #9a8aad; }}
-            QLineEdit, QSpinBox {{ background-color: {THEME_INPUT_BG}; border: 1px solid {THEME_INPUT_BORDER}; border-radius: 4px; padding: 5px 8px; color: #e8e0f2; }}
-            QGroupBox {{ border: 1px solid {THEME_BORDER}; border-radius: 6px; margin-top: 8px; padding-top: 6px; font-weight: 600; color: {THEME_HEADER_FG}; }}
-            QTextEdit {{ background-color: {THEME_LOG_BG}; border: none; color: {THEME_LOG_FG}; }}
+            QStatusBar {{
+                background-color: {THEME_BG_TABLE_ALT};
+                border-top: 1px solid rgba(72,71,82,0.2);
+            }}
+            QTableWidget {{
+                background-color: {THEME_BG_TABLE};
+                alternate-background-color: {THEME_BG_TABLE_ALT};
+                gridline-color: rgba(72,71,82,0.2);
+                border: none;
+                border-radius: 2px;
+                selection-background-color: rgba(172,163,255,0.15);
+            }}
+            QTableWidget::item {{
+                padding: 5px;
+            }}
+            QTableWidget::item:selected {{ background-color: rgba(172,163,255,0.2); color: #ece9f7; }}
+            QHeaderView::section {{
+                background-color: {THEME_HEADER_BG};
+                color: {THEME_HEADER_FG};
+                padding: 8px 6px;
+                border: none;
+                font-weight: 700;
+                font-size: 10px;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+            }}
+            QPushButton {{
+                border-radius: 2px;
+                padding: 7px 14px;
+                font-weight: 700;
+                border: none;
+                color: #ece9f7;
+            }}
+            QPushButton:disabled {{ background-color: {THEME_BTN_DISABLED} !important; color: #767480; }}
+            QLineEdit, QSpinBox {{
+                background-color: {THEME_INPUT_BG};
+                border: 1px solid rgba(72,71,82,0.2);
+                border-radius: 2px;
+                padding: 6px 8px;
+                color: #ece9f7;
+            }}
+            QLineEdit:focus, QSpinBox:focus {{
+                border: 1px solid rgba(0,253,147,0.5);
+            }}
+            QGroupBox {{
+                border: none;
+                border-radius: 2px;
+                margin-top: 8px;
+                padding-top: 6px;
+                font-weight: 700;
+                color: {THEME_HEADER_FG};
+                background-color: {THEME_BG_TABLE};
+            }}
+            QTextEdit {{
+                background-color: {THEME_LOG_BG};
+                border: 1px solid rgba(72,71,82,0.2);
+                color: {THEME_LOG_FG};
+            }}
             QSplitter::handle {{ background-color: {THEME_SPLITTER}; }}
-            QTabWidget::pane {{ border: 1px solid {THEME_BORDER}; border-radius: 4px; top: -1px; }}
-            QTabBar::tab {{ background: {THEME_HEADER_BG}; color: {THEME_HEADER_FG}; padding: 8px 16px; margin-right: 2px; border-top-left-radius: 4px; border-top-right-radius: 4px; }}
-            QTabBar::tab:selected {{ background: {THEME_BG_TABLE}; color: #fff; font-weight: 600; }}
-            QTabBar::tab:hover {{ color: #f1dbff; }}
+            QTabWidget::pane {{
+                border: none;
+                top: -1px;
+                background: {THEME_BG_TABLE_ALT};
+            }}
+            QTabBar::tab {{
+                background: {THEME_HEADER_BG};
+                color: {THEME_HEADER_FG};
+                padding: 8px 16px;
+                margin-right: 2px;
+                border-top-left-radius: 2px;
+                border-top-right-radius: 2px;
+                text-transform: uppercase;
+                font-size: 10px;
+                letter-spacing: 1px;
+                font-weight: 700;
+            }}
+            QTabBar::tab:selected {{
+                background: {THEME_BG_TABLE};
+                color: #00fd93;
+            }}
+            QTabBar::tab:hover {{ color: #00fd93; }}
             {bg_css}
             """
         )
@@ -271,7 +330,14 @@ class MainWindow(QMainWindow):
     @staticmethod
     def _btn(text, color, slot):
         b = QPushButton(text)
-        b.setStyleSheet(f"background-color:{color};")
+        if color.lower() == THEME_PRIMARY.lower():
+            b.setStyleSheet(
+                "background:qlineargradient(x1:0,y1:0,x2:1,y2:1,"
+                f"stop:0 {THEME_PRIMARY}, stop:1 {THEME_PRIMARY_DARK});"
+                "color:#000000;"
+            )
+        else:
+            b.setStyleSheet(f"background-color:{color};")
         b.clicked.connect(slot)
         return b
 

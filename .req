@@ -1,0 +1,87 @@
+# Implementation Prompt: 0xPhantomPortal (Qt for Python)
+
+**Objective:** Implement a high-fidelity desktop application using Python (PySide6 or PyQt6) based on the "Tactical Noir / Phantom Protocol" design system.
+
+## 1. Technical Requirements
+
+- **Language:** Python 3.10+
+
+- **Styling:** Custom QSS (Qt Style Sheets) for all components. No native OS styling.
+
+- **Layout:** `QMainWindow` as the base with a persistent `QFrame` sidebar on the left and a `QStackedWidget` for content navigation.
+
+## 2. Visual Design System (Tokens)
+
+- **Primary Background:** `#0d0d16` (Deep Black/Navy)
+
+- **Secondary Surface:** `#191924` (Dark Charcoal)
+
+- **Accent 1 (System Green):** `#00fd93` (Vibrant Neon Green - use for status, primary CTAs)
+
+- **Accent 2 (Phantom Purple):** `#6C5CE7` / `#aca3ff` (Muted to Vibrant Purple - use for secondary actions, buttons)
+
+- **Text (Primary):** `#ece9f7` (Off-white/Silver)
+
+- **Text (Secondary/Dim):** `#ece9f7` at 60% opacity.
+
+- **Font:** 'Space Grotesk' for headlines and 'Manrope' or 'Inter' for body/labels.
+
+- **Roundness:** 4px to 8px corner radius on cards and buttons.
+
+## 3. Core Components to Build
+
+### A. Global Navigation Sidebar
+
+- Fixed width (approx. 240px-280px).
+
+- Vertical layout with top-aligned navigation buttons: Dashboard, Profiles, Explorer, Terminal.
+
+- Bottom-aligned utility buttons: Support, Logout.
+
+- **Styling:** Inactive buttons are ghost/transparent; active buttons have a left-border accent (`#00fd93`) and subtle background highlight.
+
+### B. SFTP Profiles Dashboard (Grid)
+
+- Use a `QScrollArea` containing a `QGridLayout`.
+
+- **Profile Cards:**
+
+    - Title (`QLabel`) with heavy weight.
+
+    - Status badge (`QLabel`) with a colored dot (`#00fd93` for active, `#ff4757` for disconnected).
+
+    - Footer row with action buttons: `CONNECT` (vibrant green/purple background), `EDIT`, and `DELETE`.
+
+### C. SFTP File Explorer
+
+- **Top Bar:** Breadcrumb-style navigation and a "Back to Profiles" button.
+
+- **File List:** `QTreeView` or `QTableWidget` customized with alternating row colors and custom icons for directories vs. files.
+
+- **Transfer Overlay:** A small fixed or floating widget showing a progress bar (`QProgressBar`) with neon green styling for active uploads/downloads.
+
+### D. Connection Log & Monitoring
+
+- **Terminal View:** A `QPlainTextEdit` or `QTextBrowser` with a black background and green monospace text.
+
+- **Status Bar:** A dedicated bottom bar showing "System Live" status and encryption details.
+
+## 4. Specific View References
+
+Refer to these screen IDs for exact layout and spacing:
+
+- **Profiles View:** {{DATA:SCREEN:SCREEN_25}}
+
+- **File Explorer:** {{DATA:SCREEN:SCREEN_19}}
+
+- **Profile Config:** {{DATA:SCREEN:SCREEN_14}}
+
+- **Connection Log:** {{DATA:SCREEN:SCREEN_10}}
+
+## 5. Interaction Guidelines
+
+- **Hover States:** All buttons should have a `background-color` shift on hover.
+
+- **Transitions:** If possible, use `QPropertyAnimation` for subtle opacity fades when switching views in the `QStackedWidget`.
+
+- **Responsiveness:** Ensure the grid layout in the Profiles view uses a flexible column count to handle window resizing.

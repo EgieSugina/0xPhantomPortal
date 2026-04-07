@@ -1,0 +1,1251 @@
+<!-- SFTP Profile Configuration -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-container": "#310002",
+            "inverse-primary": "#5948d3",
+            "on-secondary": "#005b31",
+            "on-primary-fixed": "#000000",
+            "error": "#ff6e84",
+            "secondary": "#00fd93",
+            "primary-dim": "#6f5fea",
+            "on-error": "#490013",
+            "tertiary": "#ff766d",
+            "surface-container-lowest": "#000000",
+            "surface-container-high": "#1f1e2b",
+            "surface-bright": "#2b2b39",
+            "on-tertiary-fixed-variant": "#7a000c",
+            "on-error-container": "#ffb2b9",
+            "outline-variant": "#484752",
+            "surface-tint": "#aca3ff",
+            "primary": "#aca3ff",
+            "tertiary-fixed-dim": "#ff7b72",
+            "surface": "#0d0d16",
+            "on-primary-fixed-variant": "#250094",
+            "on-tertiary": "#4f0005",
+            "tertiary-dim": "#ff7168",
+            "secondary-dim": "#00ed89",
+            "surface-container": "#191924",
+            "secondary-fixed": "#00fd93",
+            "inverse-on-surface": "#55545f",
+            "inverse-surface": "#fcf8ff",
+            "tertiary-fixed": "#ff9289",
+            "surface-container-low": "#12121d",
+            "on-secondary-fixed": "#004624",
+            "error-container": "#a70138",
+            "outline": "#767480",
+            "error-dim": "#d73357",
+            "on-background": "#ece9f7",
+            "on-primary-container": "#1d007a",
+            "surface-variant": "#252532",
+            "secondary-fixed-dim": "#00ed89",
+            "on-secondary-fixed-variant": "#006638",
+            "on-surface-variant": "#aca9b6",
+            "tertiary-container": "#fd5c56",
+            "primary-fixed-dim": "#8f83ff",
+            "primary-fixed": "#9e93ff",
+            "on-surface": "#ece9f7",
+            "on-secondary-container": "#e2ffe6",
+            "secondary-container": "#006d3c",
+            "on-tertiary-fixed": "#3a0003",
+            "on-primary": "#27009a",
+            "background": "#0d0d16",
+            "surface-dim": "#0d0d16",
+            "surface-container-highest": "#252532",
+            "primary-container": "#9e93ff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "fontFamily": {
+            "headline": ["Space Grotesk"],
+            "body": ["Manrope"],
+            "label": ["Manrope"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0d0d16;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1f1e2b;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 min-h-screen flex overflow-hidden">
+<!-- Side Navigation Shell -->
+<aside class="hidden md:flex flex-col h-screen left-0 w-64 bg-[#0d0d16] border-r border-[#1f1e2b]/15 shrink-0">
+<div class="px-6 py-8">
+<div class="text-lg font-black text-[#00fd93] font-headline">ROOT_USER</div>
+<div class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-60">LEVEL_01_AUTH</div>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 flex items-center gap-3 cursor-pointer group">
+<span class="material-symbols-outlined text-sm">dashboard</span>
+<span class="text-xs uppercase tracking-widest font-label">DASHBOARD</span>
+</div>
+<div class="text-[#00fd93] border-l-4 border-[#00fd93] bg-[#191924] px-4 py-3 flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined text-sm">vpn_key</span>
+<span class="text-xs uppercase tracking-widest font-label">PROFILES</span>
+</div>
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 flex items-center gap-3 cursor-pointer group">
+<span class="material-symbols-outlined text-sm">folder_shared</span>
+<span class="text-xs uppercase tracking-widest font-label">EXPLORER</span>
+</div>
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 flex items-center gap-3 cursor-pointer group">
+<span class="material-symbols-outlined text-sm">code</span>
+<span class="text-xs uppercase tracking-widest font-label">TERMINAL</span>
+</div>
+</nav>
+<div class="p-4">
+<button class="w-full bg-secondary text-on-secondary-fixed font-label text-[10px] font-bold tracking-widest py-3 rounded-sm hover:brightness-110 transition-all active:scale-[0.98]">
+        NEW_CONNECTION
+      </button>
+</div>
+<div class="px-2 pb-6 space-y-1">
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 flex items-center gap-3 cursor-pointer font-label text-[10px] uppercase tracking-widest">
+<span class="material-symbols-outlined text-sm">help</span>
+<span>HELP</span>
+</div>
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 flex items-center gap-3 cursor-pointer font-label text-[10px] uppercase tracking-widest">
+<span class="material-symbols-outlined text-sm">logout</span>
+<span>LOGOUT</span>
+</div>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface relative">
+<!-- Top Navigation Shell -->
+<header class="flex justify-between items-center w-full px-6 py-4 bg-[#0d0d16]">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold tracking-tighter text-[#aca3ff] font-headline uppercase">TERMINAL_AUTHORITY</span>
+</div>
+<nav class="hidden md:flex items-center gap-8 font-label text-[11px] font-medium tracking-wide">
+<a class="text-[#ece9f7] opacity-70 hover:bg-[#1f1e2b] hover:text-[#00fd93] transition-colors" href="#">PORT FORWARDING</a>
+<a class="text-[#00fd93] border-b-2 border-[#00fd93] pb-1" href="#">SFTP</a>
+<a class="text-[#ece9f7] opacity-70 hover:bg-[#1f1e2b] hover:text-[#00fd93] transition-colors" href="#">LOGS</a>
+<a class="text-[#ece9f7] opacity-70 hover:bg-[#1f1e2b] hover:text-[#00fd93] transition-colors" href="#">SETTINGS</a>
+</nav>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#aca3ff] cursor-pointer">terminal</span>
+<span class="material-symbols-outlined text-[#aca3ff] cursor-pointer">settings_input_component</span>
+<div class="w-8 h-8 rounded-sm bg-surface-container-high flex items-center justify-center border border-outline-variant/20 overflow-hidden">
+<img alt="Operator Avatar" class="w-full h-full object-cover" data-alt="High-contrast stylized profile avatar icon in a digital terminal interface style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIfBejNTcBJaBobEDlc1-lrXAvX_vlkFpdFxeNdL1grqcjiKj0sASf7I2SQk4pKvarSciawXRC1PsP-V9uFHcUmcAF8vNbRt27FDNKe_g2m4FAXHAsBs46wF3Jd8vyboSUMJpK34JPdDBAeG7ozNVXALTVvWt7noijyZBb74TvpGUGeLDAvauoR0AJb2cqvQbNU5sNiMYONZqbPxJ961kaIH5yuO5Ag4Rz1tCmn2QwtQ6x1xc4zQacx-35IJQMMwDI0sVN8rmMFwY"/>
+</div>
+</div>
+</header>
+<!-- Content Area: The Profile Configuration Form -->
+<section class="flex-1 p-6 md:p-12 overflow-y-auto custom-scrollbar flex items-start justify-center">
+<div class="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Form Header Area -->
+<div class="lg:col-span-12 mb-4">
+<div class="flex items-center gap-3 mb-2">
+<span class="w-2 h-2 bg-secondary rounded-full shadow-[0_0_8px_rgba(0,253,147,0.5)]"></span>
+<h1 class="font-headline text-3xl font-bold tracking-tight text-on-surface">SFTP PROFILE CONFIGURATION</h1>
+</div>
+<p class="font-label text-sm text-on-surface-variant max-w-2xl">Establish high-fidelity secure file transfer protocols. Ensure identity keys and port mappings are verified against local authority nodes.</p>
+</div>
+<!-- Main Form Section -->
+<div class="lg:col-span-8 space-y-6">
+<div class="bg-surface-container-low p-8 rounded-sm relative overflow-hidden">
+<!-- Asymmetric Accent -->
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[80px] -mr-16 -mt-16 pointer-events-none"></div>
+<div class="space-y-8">
+<!-- Grid Layout for inputs -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Name Field -->
+<div class="space-y-2">
+<label class="block font-label text-[10px] uppercase tracking-widest text-primary font-bold">Profile Name</label>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary/50 text-on-surface font-label text-sm p-4 rounded-sm transition-all placeholder:opacity-30" placeholder="SECURE_STORAGE_01" type="text"/>
+</div>
+<!-- Host / IP Field -->
+<div class="space-y-2">
+<label class="block font-label text-[10px] uppercase tracking-widest text-primary font-bold">Host / IP Address</label>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary/50 text-on-surface font-label text-sm p-4 rounded-sm transition-all placeholder:opacity-30" placeholder="192.168.1.104" type="text"/>
+</div>
+<!-- Username Field -->
+<div class="space-y-2">
+<label class="block font-label text-[10px] uppercase tracking-widest text-primary font-bold">Username</label>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary/50 text-on-surface font-label text-sm p-4 rounded-sm transition-all placeholder:opacity-30" placeholder="root_admin" type="text"/>
+</div>
+<!-- SSH Port Field -->
+<div class="space-y-2">
+<label class="block font-label text-[10px] uppercase tracking-widest text-primary font-bold">SSH Port</label>
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary/50 text-on-surface font-label text-sm p-4 rounded-sm transition-all placeholder:opacity-30" placeholder="22" type="number"/>
+</div>
+</div>
+<!-- Identity Key Section -->
+<div class="space-y-4 pt-4">
+<div class="flex items-center justify-between">
+<label class="block font-label text-[10px] uppercase tracking-widest text-primary font-bold">Identity Key File</label>
+<span class="text-[9px] font-label text-on-surface-variant/50">RSA / ED25519 SUPPORTED</span>
+</div>
+<div class="group relative">
+<input class="w-full bg-surface-container-lowest border-none text-on-surface font-label text-sm p-4 pr-12 rounded-sm cursor-default" placeholder="~/.ssh/id_rsa_production" readonly="" type="text"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-surface-container-high hover:bg-primary/20 text-primary transition-colors rounded-sm">
+<span class="material-symbols-outlined text-lg">folder_open</span>
+</button>
+</div>
+</div>
+<!-- Divider (Visual shift only) -->
+<div class="h-px bg-outline-variant/10 w-full"></div>
+<!-- Password Auth Section -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<label class="block font-label text-[10px] uppercase tracking-widest text-primary font-bold">Password Authentication</label>
+<div class="flex items-center gap-2 px-2 py-1 bg-surface-container-highest rounded-full">
+<span class="material-symbols-outlined text-[12px] text-secondary">lock</span>
+<span class="text-[9px] font-label text-on-surface-variant uppercase tracking-tighter">Stored in keyring</span>
+</div>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary/50 text-on-surface font-label text-sm p-4 pr-12 rounded-sm transition-all placeholder:opacity-30" placeholder="••••••••••••" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+</div>
+</div>
+<!-- Local SOCKS port -->
+<div class="space-y-2">
+<label class="block font-label text-[10px] uppercase tracking-widest text-primary font-bold">Local SOCKS Port</label>
+<div class="flex items-center gap-4">
+<input class="w-32 bg-surface-container-lowest border-none focus:ring-1 focus:ring-secondary/50 text-on-surface font-label text-sm p-4 rounded-sm transition-all placeholder:opacity-30" placeholder="1080" type="number"/>
+<span class="text-xs font-label text-on-surface-variant opacity-40">Default dynamic port allocation</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Sidebar / Meta Options -->
+<div class="lg:col-span-4 space-y-6">
+<!-- Connection Metadata Card -->
+<div class="bg-surface-container-high p-6 rounded-sm space-y-6">
+<h3 class="font-headline text-xs font-black tracking-widest text-on-surface border-b border-outline-variant/20 pb-4">RUNTIME PARAMETERS</h3>
+<div class="flex items-center justify-between group cursor-pointer">
+<span class="font-label text-xs text-on-surface-variant group-hover:text-on-surface transition-colors">Auto-start on launch</span>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-5 bg-surface-container-lowest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface-variant after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary/20 peer-checked:after:bg-secondary"></div>
+</div>
+</div>
+<div class="flex items-center justify-between group cursor-pointer">
+<span class="font-label text-xs text-on-surface-variant group-hover:text-on-surface transition-colors">Maintain keep-alive</span>
+<div class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-5 bg-surface-container-lowest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-on-surface-variant after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary/20 peer-checked:after:bg-secondary"></div>
+</div>
+</div>
+<div class="pt-4">
+<div class="p-4 bg-surface-container-lowest/50 rounded-sm border-l-2 border-primary/40">
+<p class="text-[10px] font-label text-on-surface-variant leading-relaxed uppercase tracking-tight">
+<span class="text-primary font-bold">Notice:</span> Secure connection tokens are encrypted using AES-256-GCM. Do not share identity files across unauthorized terminals.
+                </p>
+</div>
+</div>
+</div>
+<!-- Diagnostic Info (Bento style small card) -->
+<div class="bg-surface-container-high p-6 rounded-sm">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-secondary text-sm">analytics</span>
+<h3 class="font-headline text-[10px] font-black tracking-widest text-on-surface">CONNECTION_HEALTH</h3>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center text-[10px] font-label">
+<span class="text-on-surface-variant">LATENCY_EST</span>
+<span class="text-on-surface">14ms</span>
+</div>
+<div class="w-full bg-surface-container-lowest h-1 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[85%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Actions Bar -->
+<div class="lg:col-span-12 flex justify-end items-center gap-4 pt-6 border-t border-outline-variant/10">
+<button class="px-8 py-3 rounded-sm font-label text-xs tracking-widest text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all">
+            CANCEL
+          </button>
+<button class="px-10 py-3 rounded-sm font-label text-xs font-black tracking-widest bg-gradient-to-br from-primary to-primary-dim text-on-primary-fixed hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(172,163,255,0.2)] transition-all">
+            SAVE_PROFILE
+          </button>
+</div>
+</div>
+</section>
+<!-- Bottom Nav for Mobile -->
+<footer class="md:hidden flex justify-around items-center w-full bg-[#191924] py-4 fixed bottom-0">
+<div class="flex flex-col items-center gap-1 text-[#00fd93]">
+<span class="material-symbols-outlined">dashboard</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-[#ece9f7] opacity-70">
+<span class="material-symbols-outlined">vpn_key</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-[#ece9f7] opacity-70">
+<span class="material-symbols-outlined">folder_shared</span>
+</div>
+<div class="flex flex-col items-center gap-1 text-[#ece9f7] opacity-70">
+<span class="material-symbols-outlined">code</span>
+</div>
+</footer>
+</main>
+<!-- Data Pulse Aesthetic Elements (Floating Glows) -->
+<div class="fixed top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="fixed bottom-1/4 right-1/4 w-64 h-64 bg-secondary/5 rounded-full blur-[100px] pointer-events-none"></div>
+</body></html>
+
+<!-- SFTP File Explorer -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "on-tertiary-container": "#310002",
+                "inverse-primary": "#5948d3",
+                "on-secondary": "#005b31",
+                "on-primary-fixed": "#000000",
+                "error": "#ff6e84",
+                "secondary": "#00fd93",
+                "primary-dim": "#6f5fea",
+                "on-error": "#490013",
+                "tertiary": "#ff766d",
+                "surface-container-lowest": "#000000",
+                "surface-container-high": "#1f1e2b",
+                "surface-bright": "#2b2b39",
+                "on-tertiary-fixed-variant": "#7a000c",
+                "on-error-container": "#ffb2b9",
+                "outline-variant": "#484752",
+                "surface-tint": "#aca3ff",
+                "primary": "#aca3ff",
+                "tertiary-fixed-dim": "#ff7b72",
+                "surface": "#0d0d16",
+                "on-primary-fixed-variant": "#250094",
+                "on-tertiary": "#4f0005",
+                "tertiary-dim": "#ff7168",
+                "secondary-dim": "#00ed89",
+                "surface-container": "#191924",
+                "secondary-fixed": "#00fd93",
+                "inverse-on-surface": "#55545f",
+                "inverse-surface": "#fcf8ff",
+                "tertiary-fixed": "#ff9289",
+                "surface-container-low": "#12121d",
+                "on-secondary-fixed": "#004624",
+                "error-container": "#a70138",
+                "outline": "#767480",
+                "error-dim": "#d73357",
+                "on-background": "#ece9f7",
+                "on-primary-container": "#1d007a",
+                "surface-variant": "#252532",
+                "secondary-fixed-dim": "#00ed89",
+                "on-secondary-fixed-variant": "#006638",
+                "on-surface-variant": "#aca9b6",
+                "tertiary-container": "#fd5c56",
+                "primary-fixed-dim": "#8f83ff",
+                "primary-fixed": "#9e93ff",
+                "on-surface": "#ece9f7",
+                "on-secondary-container": "#e2ffe6",
+                "secondary-container": "#006d3c",
+                "on-tertiary-fixed": "#3a0003",
+                "on-primary": "#27009a",
+                "background": "#0d0d16",
+                "surface-dim": "#0d0d16",
+                "surface-container-highest": "#252532",
+                "primary-container": "#9e93ff"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "fontFamily": {
+                "headline": ["Space Grotesk"],
+                "body": ["Manrope"],
+                "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #0d0d16;
+            color: #ece9f7;
+        }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .glass-panel {
+            background: rgba(43, 43, 57, 0.6);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar (Shared Component) -->
+<aside class="bg-[#0d0d16] flex flex-col h-screen left-0 w-64 border-r border-[#1f1e2b]/15 fixed z-50">
+<div class="p-6">
+<div class="text-lg font-black text-[#00fd93] font-headline">TERMINAL_AUTHORITY</div>
+<div class="mt-8 flex items-center gap-3">
+<div class="w-10 h-10 bg-surface-container-high rounded-sm flex items-center justify-center overflow-hidden">
+<img alt="System Root" data-alt="Cyberpunk style minimalist avatar of a system administrator with neon accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhLOgs4KWws1YU2tzu2QpnM4NzOynkQQYROT_z2U5qwj5bBg4oqhE4tF75AQFrlWmYfI7B0Btxdhb1Y66gPq34Z9k8g7znRCQeyYkJdEGZLqMIcg-__TZzcqLJyxuvDS01rzzt03-cP8WS4p-SUgMILEEm7wqqSgFokss8JhrW-lxL4uoC-PZTYlQl9l2du5yb7RzHADqI5wcp6Rl_EJYSStKMLWyM6nNCYY4KuAEs2aYVtl4BDaAEnqyDoba8pJ50_NXswOL6Oy0"/>
+</div>
+<div>
+<div class="text-xs uppercase tracking-widest font-headline text-[#00fd93]">ROOT_USER</div>
+<div class="text-[10px] opacity-50">LEVEL_01_AUTH</div>
+</div>
+</div>
+</div>
+<nav class="flex-1 mt-4">
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-xs uppercase tracking-widest font-headline">DASHBOARD</span>
+</div>
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined">vpn_key</span>
+<span class="text-xs uppercase tracking-widest font-headline">PROFILES</span>
+</div>
+<div class="text-[#00fd93] border-l-4 border-[#00fd93] bg-[#191924] px-4 py-3 flex items-center gap-3 cursor-pointer">
+<span class="material-symbols-outlined">folder_shared</span>
+<span class="text-xs uppercase tracking-widest font-headline">EXPLORER</span>
+</div>
+<div class="text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined">code</span>
+<span class="text-xs uppercase tracking-widest font-headline">TERMINAL</span>
+</div>
+</nav>
+<div class="p-4 mt-auto border-t border-[#1f1e2b]/15">
+<button class="w-full bg-[#00fd93] text-[#004624] py-3 rounded-sm font-headline font-bold text-xs tracking-widest hover:brightness-110 transition-all">
+                NEW_CONNECTION
+            </button>
+<div class="mt-4">
+<div class="text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined text-sm">help</span>
+<span class="text-[10px] uppercase tracking-widest font-headline">HELP</span>
+</div>
+<div class="text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100 cursor-pointer flex items-center gap-3 transition-colors">
+<span class="material-symbols-outlined text-sm">logout</span>
+<span class="text-[10px] uppercase tracking-widest font-headline">LOGOUT</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 flex flex-col bg-surface min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-[#0d0d16] flex justify-between items-center w-full px-6 py-4 fixed top-0 left-64 right-0 z-40 bg-[#191924]">
+<div class="flex items-center gap-8">
+<div class="flex gap-6">
+<a class="text-[#ece9f7] opacity-70 hover:bg-[#1f1e2b] hover:text-[#00fd93] transition-colors font-label text-xs tracking-wider" href="#">PORT FORWARDING</a>
+<a class="text-[#00fd93] border-b-2 border-[#00fd93] pb-1 font-label text-xs tracking-wider" href="#">SFTP</a>
+<a class="text-[#ece9f7] opacity-70 hover:bg-[#1f1e2b] hover:text-[#00fd93] transition-colors font-label text-xs tracking-wider" href="#">LOGS</a>
+<a class="text-[#ece9f7] opacity-70 hover:bg-[#1f1e2b] hover:text-[#00fd93] transition-colors font-label text-xs tracking-wider" href="#">SETTINGS</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center bg-surface-container-lowest px-3 py-1.5 rounded-sm">
+<span class="material-symbols-outlined text-primary text-sm mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-[10px] text-on-surface font-label w-48 uppercase tracking-tighter" placeholder="SEARCH_FILES..." type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-[#aca3ff] hover:bg-[#1f1e2b] rounded-sm transition-colors">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="p-2 text-[#aca3ff] hover:bg-[#1f1e2b] rounded-sm transition-colors">
+<span class="material-symbols-outlined">settings_input_component</span>
+</button>
+</div>
+</div>
+</header>
+<!-- SFTP Content -->
+<div class="mt-20 px-8 py-6 flex-1 flex flex-col gap-6">
+<!-- Connection Header -->
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-4">
+<div class="bg-surface-container-high p-3 rounded-sm">
+<span class="material-symbols-outlined text-secondary">storage</span>
+</div>
+<div>
+<h1 class="font-headline text-2xl font-bold tracking-tight text-on-surface">SFTP_EXPLORER</h1>
+<div class="flex items-center gap-2 mt-1">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(0,253,147,0.6)]"></span>
+<p class="text-xs font-label text-on-surface-variant tracking-wide">CONNECTED TO: <span class="text-secondary font-bold">appnaru</span></p>
+</div>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="bg-surface-container-high text-primary px-4 py-2 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-surface-bright transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+                        BACK TO PROFILES
+                    </button>
+<button class="bg-error-container text-on-surface px-4 py-2 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-error transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">link_off</span>
+                        DISCONNECT
+                    </button>
+</div>
+</div>
+<!-- Path Bar -->
+<div class="bg-surface-container-low p-4 rounded-sm flex items-center gap-4">
+<span class="text-xs font-headline text-secondary tracking-widest">REMOTE_PATH:</span>
+<div class="flex-1 bg-surface-container-lowest px-4 py-2 rounded-sm border border-outline-variant/20 flex items-center">
+<span class="text-primary text-xs opacity-50 mr-2">/</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs text-on-surface font-label w-full p-0" type="text" value="home/appnaru/deployments/v2.1.0-alpha/assets/scripts/"/>
+</div>
+<button class="p-2 bg-surface-container-high hover:bg-surface-bright text-on-surface-variant transition-colors">
+<span class="material-symbols-outlined">refresh</span>
+</button>
+</div>
+<!-- File List Container -->
+<div class="flex-1 bg-surface-container-low rounded-sm overflow-hidden flex flex-col">
+<div class="grid grid-cols-12 bg-surface-container-high px-6 py-3 border-b border-outline-variant/10">
+<div class="col-span-6 text-[10px] font-headline font-bold tracking-widest text-secondary opacity-80 uppercase">Name</div>
+<div class="col-span-2 text-[10px] font-headline font-bold tracking-widest text-secondary opacity-80 uppercase">Type</div>
+<div class="col-span-2 text-[10px] font-headline font-bold tracking-widest text-secondary opacity-80 uppercase">Size</div>
+<div class="col-span-2 text-[10px] font-headline font-bold tracking-widest text-secondary opacity-80 uppercase">Modified</div>
+</div>
+<div class="flex-1 overflow-y-auto font-label">
+<!-- Row: Folder -->
+<div class="grid grid-cols-12 px-6 py-3 hover:bg-surface-container-highest transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-dim group-hover:text-primary" style="font-variation-settings: 'FILL' 1;">folder</span>
+<span class="text-sm font-medium">config</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant uppercase tracking-tighter">Directory</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">--</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">2023-10-24 14:22</div>
+</div>
+<!-- Row: Folder -->
+<div class="grid grid-cols-12 px-6 py-3 hover:bg-surface-container-highest transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-dim group-hover:text-primary" style="font-variation-settings: 'FILL' 1;">folder</span>
+<span class="text-sm font-medium">logs</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant uppercase tracking-tighter">Directory</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">--</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">2023-10-25 09:10</div>
+</div>
+<!-- Row: File (Selected) -->
+<div class="grid grid-cols-12 px-6 py-3 bg-primary/10 border-l-2 border-primary transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">description</span>
+<span class="text-sm font-medium text-primary">main.py</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface uppercase tracking-tighter">Python File</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface">14.2 KB</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface">2023-10-27 18:45</div>
+</div>
+<!-- Row: File -->
+<div class="grid grid-cols-12 px-6 py-3 hover:bg-surface-container-highest transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface">javascript</span>
+<span class="text-sm font-medium">app.bundle.js</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant uppercase tracking-tighter">JavaScript</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">1.2 MB</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">2023-10-27 16:30</div>
+</div>
+<!-- Row: File -->
+<div class="grid grid-cols-12 px-6 py-3 hover:bg-surface-container-highest transition-colors cursor-pointer group border-b border-outline-variant/5">
+<div class="col-span-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface">settings</span>
+<span class="text-sm font-medium">.env.production</span>
+</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant uppercase tracking-tighter">Config</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">420 B</div>
+<div class="col-span-2 flex items-center text-xs text-on-surface-variant">2023-10-26 21:05</div>
+</div>
+</div>
+</div>
+<!-- Footer Actions -->
+<footer class="bg-surface-container p-6 rounded-sm flex items-center justify-between border-t border-outline-variant/10 shadow-2xl">
+<div class="flex items-center gap-2">
+<span class="text-[10px] font-headline tracking-widest text-on-surface-variant uppercase">Selected:</span>
+<span class="bg-primary/20 text-primary px-2 py-0.5 text-[10px] rounded-sm font-bold">1 ITEM</span>
+</div>
+<div class="flex gap-4">
+<button class="bg-[#aca3ff] text-[#1d007a] px-6 py-2.5 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-[#6f5fea] hover:text-on-surface transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(172,163,255,0.2)]">
+<span class="material-symbols-outlined text-sm">upload</span>
+                        UPLOAD FILES/FOLDER
+                    </button>
+<button class="bg-[#aca3ff] text-[#1d007a] px-6 py-2.5 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-[#6f5fea] hover:text-on-surface transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">download</span>
+                        DOWNLOAD SELECTED
+                    </button>
+<button class="bg-error-container text-on-surface px-6 py-2.5 rounded-sm text-xs font-headline font-bold tracking-widest hover:bg-error transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">delete_forever</span>
+                        DELETE SELECTED
+                    </button>
+</div>
+</footer>
+</div>
+</main>
+<!-- Transfer Status Overlay (Tactical Noir Pattern) -->
+<div class="fixed bottom-8 right-8 w-80 glass-panel border border-outline-variant/20 p-4 rounded-sm shadow-2xl z-50">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-[10px] font-headline font-bold tracking-[0.2em] text-secondary">ACTIVE_TRANSFERS</h3>
+<span class="bg-secondary/10 text-secondary text-[8px] px-1.5 py-0.5 rounded-full border border-secondary/20">LIVE</span>
+</div>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-[10px] mb-1.5">
+<span class="text-on-surface truncate w-32">assets.zip</span>
+<span class="text-secondary">78%</span>
+</div>
+<div class="h-1 bg-surface-container-lowest w-full rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[78%] shadow-[0_0_10px_#00fd93]"></div>
+</div>
+</div>
+<div class="flex items-center gap-2 text-[9px] text-on-surface-variant italic">
+<span class="material-symbols-outlined text-[12px] animate-pulse">sync</span>
+                Stabilizing protocol handshake...
+            </div>
+</div>
+</div>
+</body></html>
+
+<!-- SFTP Profiles Dashboard -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TERMINAL_AUTHORITY - SFTP PROFILES</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary-container": "#310002",
+                      "inverse-primary": "#5948d3",
+                      "on-secondary": "#005b31",
+                      "on-primary-fixed": "#000000",
+                      "error": "#ff6e84",
+                      "secondary": "#00fd93",
+                      "primary-dim": "#6f5fea",
+                      "on-error": "#490013",
+                      "tertiary": "#ff766d",
+                      "surface-container-lowest": "#000000",
+                      "surface-container-high": "#1f1e2b",
+                      "surface-bright": "#2b2b39",
+                      "on-tertiary-fixed-variant": "#7a000c",
+                      "on-error-container": "#ffb2b9",
+                      "outline-variant": "#484752",
+                      "surface-tint": "#aca3ff",
+                      "primary": "#aca3ff",
+                      "tertiary-fixed-dim": "#ff7b72",
+                      "surface": "#0d0d16",
+                      "on-primary-fixed-variant": "#250094",
+                      "on-tertiary": "#4f0005",
+                      "tertiary-dim": "#ff7168",
+                      "secondary-dim": "#00ed89",
+                      "surface-container": "#191924",
+                      "secondary-fixed": "#00fd93",
+                      "inverse-on-surface": "#55545f",
+                      "inverse-surface": "#fcf8ff",
+                      "tertiary-fixed": "#ff9289",
+                      "surface-container-low": "#12121d",
+                      "on-secondary-fixed": "#004624",
+                      "error-container": "#a70138",
+                      "outline": "#767480",
+                      "error-dim": "#d73357",
+                      "on-background": "#ece9f7",
+                      "on-primary-container": "#1d007a",
+                      "surface-variant": "#252532",
+                      "secondary-fixed-dim": "#00ed89",
+                      "on-secondary-fixed-variant": "#006638",
+                      "on-surface-variant": "#aca9b6",
+                      "tertiary-container": "#fd5c56",
+                      "primary-fixed-dim": "#8f83ff",
+                      "primary-fixed": "#9e93ff",
+                      "on-surface": "#ece9f7",
+                      "on-secondary-container": "#e2ffe6",
+                      "secondary-container": "#006d3c",
+                      "on-tertiary-fixed": "#3a0003",
+                      "on-primary": "#27009a",
+                      "background": "#0d0d16",
+                      "surface-dim": "#0d0d16",
+                      "surface-container-highest": "#252532",
+                      "primary-container": "#9e93ff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "fontFamily": {
+                      "headline": ["Space Grotesk"],
+                      "body": ["Manrope"],
+                      "label": ["Manrope"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #0d0d16;
+            color: #ece9f7;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .terminal-glow {
+            box-shadow: 0 0 15px rgba(172, 163, 255, 0.1);
+        }
+        .pulse-secondary {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar (from JSON) -->
+<aside class="hidden md:flex flex-col h-screen left-0 w-64 bg-[#0d0d16] border-r border-[#1f1e2b]/15 shrink-0 sticky top-0">
+<div class="px-6 py-8">
+<span class="text-lg font-black text-[#00fd93] font-headline tracking-tighter">ROOT_USER</span>
+<div class="text-[10px] uppercase tracking-widest text-primary opacity-60">LEVEL_01_AUTH</div>
+</div>
+<nav class="flex-1 mt-4">
+<div class="space-y-1">
+<a class="flex items-center text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="text-xs uppercase tracking-widest font-label">DASHBOARD</span>
+</a>
+<a class="flex items-center text-[#00fd93] border-l-4 border-[#00fd93] bg-[#191924] px-4 py-3" href="#">
+<span class="material-symbols-outlined mr-3">vpn_key</span>
+<span class="text-xs uppercase tracking-widest font-label">PROFILES</span>
+</a>
+<a class="flex items-center text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">folder_shared</span>
+<span class="text-xs uppercase tracking-widest font-label">EXPLORER</span>
+</a>
+<a class="flex items-center text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 transition-colors" href="#">
+<span class="material-symbols-outlined mr-3">code</span>
+<span class="text-xs uppercase tracking-widest font-label">TERMINAL</span>
+</a>
+</div>
+</nav>
+<div class="p-4">
+<button class="w-full py-3 bg-secondary text-on-secondary-fixed text-xs font-bold tracking-widest rounded-sm hover:brightness-110 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                NEW_CONNECTION
+            </button>
+</div>
+<div class="border-t border-[#1f1e2b]/15 py-4">
+<a class="flex items-center text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">help</span>
+<span class="text-xs uppercase tracking-widest font-label">HELP</span>
+</a>
+<a class="flex items-center text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100" href="#">
+<span class="material-symbols-outlined mr-3 text-sm">logout</span>
+<span class="text-xs uppercase tracking-widest font-label">LOGOUT</span>
+</a>
+</div>
+</aside>
+<main class="flex-1 flex flex-col">
+<!-- TopNavBar (from JSON) -->
+<header class="bg-[#0d0d16] flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-[#aca3ff] font-headline">TERMINAL_AUTHORITY</span>
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-[#ece9f7] opacity-70 font-label text-xs tracking-widest hover:text-[#00fd93] transition-colors" href="#">PORT FORWARDING</a>
+<a class="text-[#00fd93] border-b-2 border-[#00fd93] pb-1 font-label text-xs tracking-widest" href="#">SFTP</a>
+<a class="text-[#ece9f7] opacity-70 font-label text-xs tracking-widest hover:text-[#00fd93] transition-colors" href="#">LOGS</a>
+<a class="text-[#ece9f7] opacity-70 font-label text-xs tracking-widest hover:text-[#00fd93] transition-colors" href="#">SETTINGS</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-[#ece9f7] opacity-70 hover:text-[#aca3ff] transition-colors">
+<span class="material-symbols-outlined">terminal</span>
+</button>
+<button class="text-[#ece9f7] opacity-70 hover:text-[#aca3ff] transition-colors">
+<span class="material-symbols-outlined">settings_input_component</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center overflow-hidden">
+<img alt="Operator Avatar" data-alt="Cyberpunk operator avatar profile picture in a neon circuit aesthetic, digital glitch art style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0q_THd0p-rTAxP_9_L50SNkEWEFWASs19kf8KdqYjHUQFDXkxfBHBwLVagW2NhrmvvOw5w6JQ6BA570PfDXDx8b2RjtW7wpRZowMOXl5TaAtnryyPnW_g411MLSpfD5LBkQXQV_s76W1HPHanmBkVp7oQqH2flMAxE3lnYun2Mu07JJbhwp-65eiZ8-czCZjk3QtviRRBBXmwQI_IOfZVrAVviWSyzyIghayGMdzao7Tni8l9y22CH5ZdWc3MWLfPdjX076Yqf_I"/>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<section class="flex-1 p-6 md:p-10 space-y-8 bg-surface">
+<!-- Header Section -->
+<div class="flex justify-between items-end">
+<div class="space-y-1">
+<h1 class="text-4xl font-headline font-bold text-on-surface tracking-tight">SFTP PROFILES</h1>
+<p class="text-on-surface-variant font-body text-sm max-w-md">Secure File Transfer Management Protocol Cluster. Encrypted tunneling active.</p>
+</div>
+<button class="bg-primary hover:bg-primary-dim text-on-primary-fixed font-bold py-3 px-6 rounded-sm flex items-center gap-2 transition-all shadow-[0_0_20px_rgba(172,163,255,0.2)]">
+<span class="material-symbols-outlined">cloud_upload</span>
+                    ADD SFTP
+                </button>
+</div>
+<!-- Bento-Style Grid of SFTP Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Card 1: Active Connection -->
+<div class="bg-surface-container-low group hover:bg-surface-container-high transition-all duration-300 relative overflow-hidden flex flex-col p-6 rounded-sm">
+<div class="absolute top-0 right-0 p-4">
+<div class="flex items-center gap-2 px-2 py-1 bg-secondary-container rounded-full">
+<div class="h-2 w-2 rounded-full bg-secondary pulse-secondary"></div>
+<span class="text-[10px] font-black text-secondary uppercase tracking-widest">ACTIVE</span>
+</div>
+</div>
+<div class="mb-4">
+<span class="material-symbols-outlined text-primary mb-2" style="font-size: 32px;">dns</span>
+<h3 class="text-xl font-headline font-bold text-on-surface">appnaru</h3>
+<p class="text-outline text-xs font-label mt-1">ssh.naru.dev:22</p>
+</div>
+<div class="mt-auto pt-6 flex gap-3">
+<button class="flex-1 bg-secondary text-on-secondary-fixed py-2 rounded-sm text-xs font-bold tracking-widest hover:brightness-110 transition-all uppercase">Connect</button>
+<button class="px-4 border border-outline-variant text-primary py-2 rounded-sm text-xs font-bold hover:bg-primary/10 transition-all uppercase">Edit</button>
+<button class="px-4 border border-error/30 text-error py-2 rounded-sm text-xs font-bold hover:bg-error/10 transition-all uppercase">Delete</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-low group hover:bg-surface-container-high transition-all duration-300 relative overflow-hidden flex flex-col p-6 rounded-sm">
+<div class="mb-4">
+<span class="material-symbols-outlined text-outline mb-2" style="font-size: 32px;">cloud_sync</span>
+<h3 class="text-xl font-headline font-bold text-on-surface">ID CloudHost</h3>
+<p class="text-outline text-xs font-label mt-1">sftp.idcloudhost.com:2222</p>
+</div>
+<div class="mt-auto pt-6 flex gap-3">
+<button class="flex-1 bg-surface-container-highest text-on-surface py-2 rounded-sm text-xs font-bold tracking-widest hover:bg-secondary hover:text-on-secondary transition-all uppercase">Connect</button>
+<button class="px-4 border border-outline-variant text-primary py-2 rounded-sm text-xs font-bold hover:bg-primary/10 transition-all uppercase">Edit</button>
+<button class="px-4 border border-error/30 text-error py-2 rounded-sm text-xs font-bold hover:bg-error/10 transition-all uppercase">Delete</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-low group hover:bg-surface-container-high transition-all duration-300 relative overflow-hidden flex flex-col p-6 rounded-sm">
+<div class="mb-4">
+<span class="material-symbols-outlined text-outline mb-2" style="font-size: 32px;">storage</span>
+<h3 class="text-xl font-headline font-bold text-on-surface">Data Node Omega</h3>
+<p class="text-outline text-xs font-label mt-1">192.168.1.105:22</p>
+</div>
+<div class="mt-auto pt-6 flex gap-3">
+<button class="flex-1 bg-surface-container-highest text-on-surface py-2 rounded-sm text-xs font-bold tracking-widest hover:bg-secondary hover:text-on-secondary transition-all uppercase">Connect</button>
+<button class="px-4 border border-outline-variant text-primary py-2 rounded-sm text-xs font-bold hover:bg-primary/10 transition-all uppercase">Edit</button>
+<button class="px-4 border border-error/30 text-error py-2 rounded-sm text-xs font-bold hover:bg-error/10 transition-all uppercase">Delete</button>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-low group hover:bg-surface-container-high transition-all duration-300 relative overflow-hidden flex flex-col p-6 rounded-sm">
+<div class="mb-4">
+<span class="material-symbols-outlined text-outline mb-2" style="font-size: 32px;">security</span>
+<h3 class="text-xl font-headline font-bold text-on-surface">VPN-GATE-7</h3>
+<p class="text-outline text-xs font-label mt-1">gate7.secure-tunnel.net:2022</p>
+</div>
+<div class="mt-auto pt-6 flex gap-3">
+<button class="flex-1 bg-surface-container-highest text-on-surface py-2 rounded-sm text-xs font-bold tracking-widest hover:bg-secondary hover:text-on-secondary transition-all uppercase">Connect</button>
+<button class="px-4 border border-outline-variant text-primary py-2 rounded-sm text-xs font-bold hover:bg-primary/10 transition-all uppercase">Edit</button>
+<button class="px-4 border border-error/30 text-error py-2 rounded-sm text-xs font-bold hover:bg-error/10 transition-all uppercase">Delete</button>
+</div>
+</div>
+<!-- Add New Prompt Placeholder -->
+<div class="border-2 border-dashed border-outline-variant/30 flex flex-col items-center justify-center p-6 rounded-sm group hover:border-primary/50 cursor-pointer transition-all">
+<span class="material-symbols-outlined text-outline group-hover:text-primary mb-3" style="font-size: 48px;">add_circle</span>
+<span class="text-xs font-bold tracking-widest text-outline group-hover:text-primary font-label">NEW_PROFILE_INSTANCE</span>
+</div>
+</div>
+<!-- Dashboard Analytics Layer -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 pt-10">
+<div class="bg-surface-container p-4 flex items-center justify-between">
+<div>
+<div class="text-[10px] text-outline font-label uppercase tracking-widest">Active Tunnels</div>
+<div class="text-2xl font-headline font-bold text-secondary">01</div>
+</div>
+<span class="material-symbols-outlined text-secondary/30">radar</span>
+</div>
+<div class="bg-surface-container p-4 flex items-center justify-between">
+<div>
+<div class="text-[10px] text-outline font-label uppercase tracking-widest">Total Profiles</div>
+<div class="text-2xl font-headline font-bold text-primary">04</div>
+</div>
+<span class="material-symbols-outlined text-primary/30">analytics</span>
+</div>
+<div class="bg-surface-container p-4 flex items-center justify-between">
+<div>
+<div class="text-[10px] text-outline font-label uppercase tracking-widest">Latency Avg</div>
+<div class="text-2xl font-headline font-bold text-on-surface">24ms</div>
+</div>
+<span class="material-symbols-outlined text-outline/30">speed</span>
+</div>
+<div class="bg-surface-container p-4 flex items-center justify-between">
+<div>
+<div class="text-[10px] text-outline font-label uppercase tracking-widest">Data Shifted</div>
+<div class="text-2xl font-headline font-bold text-on-surface">1.2 TB</div>
+</div>
+<span class="material-symbols-outlined text-outline/30">data_thresholding</span>
+</div>
+</div>
+</section>
+<!-- Footer / Status Bar -->
+<footer class="bg-[#191924] px-6 py-2 flex justify-between items-center text-[10px] font-label tracking-widest border-t border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<div class="h-1.5 w-1.5 rounded-full bg-secondary shadow-[0_0_5px_#00fd93]"></div>
+<span class="text-on-surface uppercase opacity-60">1/1 tunnels connected</span>
+</div>
+<div class="h-3 w-px bg-outline-variant/30"></div>
+<span class="text-outline uppercase">Uptime: 24h 02m 11s</span>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-outline">ENCRYPTION: AES-256-GCM</span>
+<span class="text-primary font-bold">V 2.4.0-STABLE</span>
+</div>
+</footer>
+</main>
+</body></html>
+
+<!-- SFTP Connection Log -->
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TERMINAL_AUTHORITY - SFTP Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #0d0d16;
+            color: #ece9f7;
+        }
+        .font-headline {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .terminal-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: #0d0d16;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #1f1e2b;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary-container": "#310002",
+                        "inverse-primary": "#5948d3",
+                        "on-secondary": "#005b31",
+                        "on-primary-fixed": "#000000",
+                        "error": "#ff6e84",
+                        "secondary": "#00fd93",
+                        "primary-dim": "#6f5fea",
+                        "on-error": "#490013",
+                        "tertiary": "#ff766d",
+                        "surface-container-lowest": "#000000",
+                        "surface-container-high": "#1f1e2b",
+                        "surface-bright": "#2b2b39",
+                        "on-tertiary-fixed-variant": "#7a000c",
+                        "on-error-container": "#ffb2b9",
+                        "outline-variant": "#484752",
+                        "surface-tint": "#aca3ff",
+                        "primary": "#aca3ff",
+                        "tertiary-fixed-dim": "#ff7b72",
+                        "surface": "#0d0d16",
+                        "on-primary-fixed-variant": "#250094",
+                        "on-tertiary": "#4f0005",
+                        "tertiary-dim": "#ff7168",
+                        "secondary-dim": "#00ed89",
+                        "surface-container": "#191924",
+                        "secondary-fixed": "#00fd93",
+                        "inverse-on-surface": "#55545f",
+                        "inverse-surface": "#fcf8ff",
+                        "tertiary-fixed": "#ff9289",
+                        "surface-container-low": "#12121d",
+                        "on-secondary-fixed": "#004624",
+                        "error-container": "#a70138",
+                        "outline": "#767480",
+                        "error-dim": "#d73357",
+                        "on-background": "#ece9f7",
+                        "on-primary-container": "#1d007a",
+                        "surface-variant": "#252532",
+                        "secondary-fixed-dim": "#00ed89",
+                        "on-secondary-fixed-variant": "#006638",
+                        "on-surface-variant": "#aca9b6",
+                        "tertiary-container": "#fd5c56",
+                        "primary-fixed-dim": "#8f83ff",
+                        "primary-fixed": "#9e93ff",
+                        "on-surface": "#ece9f7",
+                        "on-secondary-container": "#e2ffe6",
+                        "secondary-container": "#006d3c",
+                        "on-tertiary-fixed": "#3a0003",
+                        "on-primary": "#27009a",
+                        "background": "#0d0d16",
+                        "surface-dim": "#0d0d16",
+                        "surface-container-highest": "#252532",
+                        "primary-container": "#9e93ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar (Authority: JSON & Component Mapping) -->
+<aside class="hidden md:flex flex-col h-screen left-0 w-64 bg-[#0d0d16] border-r border-[#1f1e2b]/15 shrink-0 fixed top-0">
+<!-- Header -->
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-sm bg-surface-container-high flex items-center justify-center overflow-hidden border border-primary/20">
+<img alt="System Root" class="w-full h-full object-cover" data-alt="high contrast macro shot of a metallic cpu core with subtle cyan bioluminescent lighting glowing from within" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDe_N0P3e7TOBSX6pYhFZwP6OiHXPVgu3coKMhNtI4obS7WYWkW-FEIBr45ZbjE2SgZNDMAPuTeBo1Yliep1sQI3IBTNCZ2q49OKV-ONf_RQbrEdAXFE2yU1LcoCThrWLstNQ4pl3MNQL04PgCSjEsXonUzTk0WhCeaUyEFyS1qoaa8KP857M98pC1ZmKYctXIAWVJyGFmIr4V-Ho2_7IgiOLNysisASoK2FP_zFgSu4o_jgtjEbHLKZ23gRlBvjRpu0h2GeL0kVfY"/>
+</div>
+<div>
+<h2 class="text-lg font-black text-[#00fd93] font-headline tracking-tighter">ROOT_USER</h2>
+<p class="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant opacity-70">LEVEL_01_AUTH</p>
+</div>
+</div>
+<!-- Main Tabs -->
+<nav class="space-y-1">
+<a class="flex items-center gap-3 text-[#00fd93] border-l-4 border-[#00fd93] bg-[#191924] px-4 py-3 group transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="text-xs uppercase tracking-widest font-headline">DASHBOARD</span>
+</a>
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="vpn_key">vpn_key</span>
+<span class="text-xs uppercase tracking-widest font-headline">PROFILES</span>
+</a>
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="folder_shared">folder_shared</span>
+<span class="text-xs uppercase tracking-widest font-headline">EXPLORER</span>
+</a>
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-3 hover:bg-[#1f1e2b] hover:opacity-100 transition-all duration-300" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="code">code</span>
+<span class="text-xs uppercase tracking-widest font-headline">TERMINAL</span>
+</a>
+</nav>
+</div>
+<div class="px-6 mb-8">
+<button class="w-full py-3 bg-primary/10 border border-primary/30 text-primary text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-all duration-300 rounded-sm">
+                NEW_CONNECTION
+            </button>
+</div>
+<!-- Footer -->
+<div class="mt-auto p-6 space-y-1">
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="help">help</span>
+<span class="text-[10px] uppercase tracking-widest font-headline">HELP</span>
+</a>
+<a class="flex items-center gap-3 text-[#ece9f7] opacity-50 px-4 py-2 hover:bg-[#1f1e2b] hover:opacity-100 transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="logout">logout</span>
+<span class="text-[10px] uppercase tracking-widest font-headline">LOGOUT</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen">
+<!-- TopAppBar (Authority: JSON) -->
+<header class="flex justify-between items-center w-full px-6 py-4 bg-[#0d0d16] sticky top-0 z-10 border-b border-[#1f1e2b]/30">
+<div class="flex items-center gap-8">
+<h1 class="text-xl font-bold tracking-tighter text-[#aca3ff] font-headline">TERMINAL_AUTHORITY</h1>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-[#ece9f7] opacity-70 text-[10px] font-bold tracking-widest font-headline hover:text-[#00fd93] transition-colors" href="#">PORT FORWARDING</a>
+<a class="text-[#00fd93] border-b-2 border-[#00fd93] pb-1 text-[10px] font-bold tracking-widest font-headline" href="#">SFTP</a>
+<a class="text-[#ece9f7] opacity-70 text-[10px] font-bold tracking-widest font-headline hover:text-[#00fd93] transition-colors" href="#">LOGS</a>
+<a class="text-[#ece9f7] opacity-70 text-[10px] font-bold tracking-widest font-headline hover:text-[#00fd93] transition-colors" href="#">SETTINGS</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm" data-icon="terminal">terminal</span>
+<input class="bg-surface-container-lowest border-none text-[10px] tracking-widest pl-10 pr-4 py-2 w-48 focus:ring-1 focus:ring-secondary/50 rounded-sm" placeholder="EXECUTE COMMAND..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-primary hover:text-secondary transition-colors" data-icon="settings_input_component">settings_input_component</button>
+</div>
+</header>
+<!-- Content Area -->
+<div class="p-6 space-y-6 flex-1 bg-surface-dim">
+<!-- Connection Table Section -->
+<section class="bg-surface-container-low rounded-sm overflow-hidden shadow-2xl">
+<div class="px-6 py-4 flex justify-between items-center border-b border-surface-container-high">
+<h2 class="font-headline font-bold text-primary tracking-tight flex items-center gap-2 uppercase text-sm">
+<span class="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
+                        Active SFTP Streams
+                    </h2>
+<div class="flex gap-4">
+<div class="flex items-center gap-2 bg-surface-container-lowest px-3 py-1 rounded-sm">
+<span class="text-[9px] font-bold tracking-widest opacity-50">ALL_TUNNELS</span>
+<div class="w-8 h-4 bg-secondary/20 rounded-full relative cursor-pointer">
+<div class="absolute right-0.5 top-0.5 w-3 h-3 bg-secondary rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high/30">
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">Name</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">Host</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">User</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">SSH</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">SOCKS Port</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase">Auth</th>
+<th class="px-6 py-3 text-[10px] font-black tracking-widest text-on-surface-variant uppercase text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-high/20">
+<tr class="hover:bg-surface-container-highest/30 transition-colors">
+<td class="px-6 py-4 font-headline text-sm font-semibold">PRODUCTION_DB_01</td>
+<td class="px-6 py-4 text-xs opacity-80">192.168.1.105</td>
+<td class="px-6 py-4 text-xs opacity-80">sys_admin</td>
+<td class="px-6 py-4 text-xs opacity-80">ED25519</td>
+<td class="px-6 py-4 text-xs font-mono text-primary">8081</td>
+<td class="px-6 py-4 text-xs opacity-80">Keyfile</td>
+<td class="px-6 py-4 text-right">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 bg-secondary/10 text-secondary text-[9px] font-bold rounded-sm border border-secondary/20">
+                                        CONNECTED
+                                    </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/30 transition-colors">
+<td class="px-6 py-4 font-headline text-sm font-semibold text-on-surface-variant">BACKUP_VAULT_WEST</td>
+<td class="px-6 py-4 text-xs opacity-80">10.0.42.12</td>
+<td class="px-6 py-4 text-xs opacity-80">vault_user</td>
+<td class="px-6 py-4 text-xs opacity-80">RSA_4096</td>
+<td class="px-6 py-4 text-xs font-mono text-primary">9002</td>
+<td class="px-6 py-4 text-xs opacity-80">Keyfile</td>
+<td class="px-6 py-4 text-right">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 bg-error/10 text-error text-[9px] font-bold rounded-sm border border-error/20">
+                                        DISCONNECTED
+                                    </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-highest/30 transition-colors">
+<td class="px-6 py-4 font-headline text-sm font-semibold">STAT_SERVER_GLOBAL</td>
+<td class="px-6 py-4 text-xs opacity-80">172.16.0.88</td>
+<td class="px-6 py-4 text-xs opacity-80">analyst_03</td>
+<td class="px-6 py-4 text-xs opacity-80">ED25519</td>
+<td class="px-6 py-4 text-xs font-mono text-primary">7070</td>
+<td class="px-6 py-4 text-xs opacity-80">MFA_Auth</td>
+<td class="px-6 py-4 text-right">
+<span class="inline-flex items-center gap-1.5 px-2 py-1 bg-secondary/10 text-secondary text-[9px] font-bold rounded-sm border border-secondary/20">
+                                        CONNECTED
+                                    </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Terminal Log Section -->
+<section class="flex-1 flex flex-col bg-surface-container-lowest border border-surface-container-high/50 rounded-sm">
+<div class="px-4 py-2 bg-surface-container-high flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-secondary" data-icon="terminal">terminal</span>
+<span class="text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">CONNECTION_LOG_STREAM</span>
+</div>
+<div class="flex gap-2">
+<div class="w-2 h-2 rounded-full bg-error/40"></div>
+<div class="w-2 h-2 rounded-full bg-tertiary/40"></div>
+<div class="w-2 h-2 rounded-full bg-secondary/40"></div>
+</div>
+</div>
+<div class="p-6 font-mono text-[11px] leading-relaxed overflow-y-auto terminal-scroll h-[300px] text-on-surface-variant/80">
+<p class="text-secondary"><span class="opacity-40">[2023-10-24 14:02:11]</span> System: Initializing secure handshake with PRODUCTION_DB_01...</p>
+<p><span class="opacity-40">[2023-10-24 14:02:12]</span> Auth: Key verification successful. Signature valid.</p>
+<p><span class="opacity-40">[2023-10-24 14:02:13]</span> Tunnel: SSH Tunnel established on local port 8081.</p>
+<p class="text-primary"><span class="opacity-40">[2023-10-24 14:02:14]</span> Status: SFTP Channel Open. Ready for I/O operations.</p>
+<p class="text-error"><span class="opacity-40">[2023-10-24 14:05:01]</span> Warn: Connection latency spike detected on node 10.0.42.12.</p>
+<p><span class="opacity-40">[2023-10-24 14:05:22]</span> System: Re-routing traffic through secondary gateway...</p>
+<p><span class="opacity-40">[2023-10-24 14:08:11]</span> Log: 4.2GB transferred via encrypted stream.</p>
+<p class="animate-pulse inline-block w-2 h-4 bg-secondary ml-1 mt-2 align-middle"></p>
+</div>
+</section>
+</div>
+<!-- Footer Actions (Authority: Design System CTAs) -->
+<footer class="p-6 bg-surface-container flex flex-wrap items-center justify-between gap-6 border-t border-surface-container-high">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<span class="text-[10px] font-black tracking-[0.2em] opacity-60 uppercase">Global Switches:</span>
+<button class="flex items-center gap-2 bg-surface-container-high hover:bg-surface-container-highest px-4 py-2 transition-colors rounded-sm border border-outline-variant/20">
+<span class="w-2 h-2 bg-secondary rounded-full shadow-[0_0_8px_#00fd93]"></span>
+<span class="text-[9px] font-bold tracking-widest">ALL ON</span>
+</button>
+<button class="flex items-center gap-2 bg-surface-container-high hover:bg-surface-container-highest px-4 py-2 transition-colors rounded-sm border border-outline-variant/20">
+<span class="w-2 h-2 bg-error rounded-full opacity-50"></span>
+<span class="text-[9px] font-bold tracking-widest">ALL OFF</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="px-8 py-3 bg-surface-container-highest text-on-surface font-headline font-bold text-xs tracking-widest hover:bg-primary hover:text-on-primary transition-all rounded-sm flex items-center gap-2 group">
+<span class="material-symbols-outlined text-sm group-hover:rotate-12 transition-transform" data-icon="power_settings_new">power_settings_new</span>
+                    DISCONNECT_SELECTED
+                </button>
+<button class="px-8 py-3 bg-gradient-to-br from-primary to-primary-dim text-on-primary font-headline font-bold text-xs tracking-widest hover:brightness-110 shadow-[0_0_15px_rgba(172,163,255,0.3)] transition-all rounded-sm flex items-center gap-2 group">
+<span class="material-symbols-outlined text-sm group-hover:scale-110 transition-transform" data-icon="rocket_launch">rocket_launch</span>
+                    CONNECT_INSTANCES
+                </button>
+</div>
+</footer>
+</main>
+<!-- Visual Polish: Subtle Gradient Overlay -->
+<div class="fixed inset-0 pointer-events-none bg-gradient-to-tr from-primary/5 via-transparent to-secondary/5 mix-blend-overlay"></div>
+</body></html>
