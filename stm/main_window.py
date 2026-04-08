@@ -111,7 +111,7 @@ class MainWindow(QMainWindow):
         title_font.setBold(True)
         title.setFont(title_font)
         title.setStyleSheet(f"letter-spacing:1px;color:{THEME_TITLE};")
-        cfg_btn_global = self._btn("⭳⭱ CONFIG_IO", THEME_BTN_SECONDARY, self._config_io)
+        cfg_btn_global = self._btn("⭳⭱ CONFIG_IE", THEME_BTN_SECONDARY, self._config_io)
         cfg_btn_global.setToolTip("BACKUP_RESTORE_FULL_CONFIGURATION")
         header.addWidget(logo)
         header.addWidget(title)
@@ -593,10 +593,20 @@ class MainWindow(QMainWindow):
             table.setItem(row, 7, s)
 
     def _status_label(self, s):
-        return {"connected": "● Connected", "connecting": "◌ Connecting…", "disconnected": "○ Disconnected"}.get(s, s)
+        return {
+            "connected": "● Connected",
+            "connecting": "◌ Connecting…",
+            "reconnecting": "◌ Reconnecting…",
+            "disconnected": "○ Disconnected",
+        }.get(s, s)
 
     def _status_color(self, s):
-        return {"connected": STATUS_CONNECTED, "connecting": STATUS_CONNECTING, "disconnected": STATUS_DISCONNECTED}.get(s, STATUS_DISABLED)
+        return {
+            "connected": STATUS_CONNECTED,
+            "connecting": STATUS_CONNECTING,
+            "reconnecting": STATUS_CONNECTING,
+            "disconnected": STATUS_DISCONNECTED,
+        }.get(s, STATUS_DISABLED)
 
     def _selected_tunnel(self) -> dict | None:
         tbl = self._kind_tables[self._current_kind()]
@@ -731,7 +741,7 @@ class MainWindow(QMainWindow):
             for row, t in enumerate(self._tunnels_for_kind(kind)):
                 status = self._statuses.get(t["id"], "disconnected")
                 item = table.item(row, 7)
-                if item and status == "connecting":
+                if item and status in ("connecting", "reconnecting"):
                     item.setForeground(QColor(STATUS_CONNECTING if self._blink else THEME_PRIMARY_MUTED))
 
     def closeEvent(self, event):

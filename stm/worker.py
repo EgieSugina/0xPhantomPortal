@@ -79,8 +79,9 @@ class TunnelWorker(QObject):
 
     def _run(self):
         retry_delay = 2
+        first_attempt = True
         while self._running:
-            self.status_changed.emit(self.tid, "connecting")
+            self.status_changed.emit(self.tid, "connecting" if first_attempt else "reconnecting")
             t = self.tunnel
             use_pw = bool(self.password) and not t.get("identity_file")
             cmd = self._build_cmd(t, use_pw)
@@ -100,8 +101,18 @@ class TunnelWorker(QObject):
                     text=True,
                     env=env,
                 )
-                self.status_changed.emit(self.tid, "connected")
-                self.log_message.emit(self.tid, f"✅ SSH session up — PID {self._process.pid}")
+                # Avoid reporting "connected" for very fast startup failures.
+                startup_ok = False
+                for _ in range(10):
+                    if not self._running:
+                        break
+                    if self._process.poll() is not None:
+                        break
+                    time.sleep(0.1)
+                if self._running and self._process.poll() is None:
+                    startup_ok = True
+                    self.status_changed.emit(self.tid, "connected")
+                    self.log_message.emit(self.tid, f"✅ SSH session up — PID {self._process.pid}")
                 for line in self._process.stdout:
                     line = line.strip()
                     if line:
@@ -110,6 +121,8 @@ class TunnelWorker(QObject):
                         break
                 self._process.wait()
                 rc = self._process.returncode
+                if not startup_ok:
+                    self.log_message.emit(self.tid, f"⚠️  SSH exited during startup (exit {rc}).")
             except FileNotFoundError as e:
                 missing = "sshpass" if "sshpass" in str(e) else "ssh"
                 self.log_message.emit(
@@ -129,11 +142,13 @@ class TunnelWorker(QObject):
             self.log_message.emit(
                 self.tid, f"⚠️  Disconnected (exit {rc}). Reconnecting in {retry_delay}s…"
             )
+            self.status_changed.emit(self.tid, "reconnecting")
             for _ in range(retry_delay * 10):
                 if not self._running:
                     break
                 time.sleep(0.1)
             retry_delay = min(retry_delay * 2, 60)
+            first_attempt = False
 
     @staticmethod
     def _build_cmd(t: dict, use_password: bool) -> list:
